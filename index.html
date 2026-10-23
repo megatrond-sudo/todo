@@ -67,7 +67,7 @@ const cfg = () => { try { return JSON.parse(localStorage[CK] || 'null'); } catch
 const FILE = 'todo-data.json';
 async function gh(path, opt = {}) {
   const c = cfg();
-  const r = await fetch('https://api.github.com' + path, { ...opt, headers: { Authorization: 'Bearer ' + c.token, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' } });
+  const r = await fetch('https://api.github.com' + path, { ...opt, cache: 'no-store', headers: { Authorization: 'Bearer ' + c.token, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' } });
   if (!r.ok) throw new Error('GitHub ' + r.status);
   return r.json();
 }
@@ -86,7 +86,7 @@ async function cloudSync() {
     const changedRemote = JSON.stringify(C.merge(remote, remote)) !== JSON.stringify(merged);
     store = merged; C.seedRecurring(store); persist();
     if (changedRemote || !f) await gh('/gists/' + c.gistId, { method: 'PATCH', body: JSON.stringify({ files: { [FILE]: { content: JSON.stringify(store, null, 2) } } }) });
-    say('Synced ' + new Date().toLocaleTimeString());
+    say('Synced ' + new Date().toLocaleTimeString() + ' · cloud ' + c.gistId.slice(0, 6) + ' · ' + C.activeItems(store).length + ' items');
   } catch (e) { say('Cloud sync failed: ' + e.message + ' (changes are kept on this device)'); }
   finally { busy = false; if (again) { again = false; scheduleCloud(); } }
   return true;
