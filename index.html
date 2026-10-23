@@ -96,8 +96,9 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) clou
 addEventListener('online', cloudSync);
 
 $('cloud').onclick = async () => {
-  const input = (prompt('Paste EITHER your GitHub token (starts with ghp_) OR a setup code from another device:') || '').trim();
+  let input = (prompt('Paste EITHER your GitHub token (starts with ghp_) OR a setup link/code from another device:') || '').trim();
   if (!input) return;
+  if (input.includes('#setup=')) input = decodeURIComponent(input.split('#setup=')[1]);
   try {
     if (/^(ghp_|github_pat_)/.test(input)) {
       localStorage[CK] = JSON.stringify({ token: input, gistId: '' });
@@ -113,9 +114,9 @@ $('cloud').onclick = async () => {
 };
 $('code').onclick = async () => {
   if (!cfg()) return say('Set up cloud first.');
-  const code = btoa(localStorage[CK]);
-  try { await navigator.clipboard.writeText(code); say('Setup code copied. Paste it in "Cloud setup" on the other device. Keep it private.'); }
-  catch { prompt('Copy this setup code:', code); }
+  const code = location.origin + location.pathname + '#setup=' + encodeURIComponent(btoa(localStorage[CK]));
+  try { await navigator.clipboard.writeText(code); say('Setup link copied. Open it on the other device. Keep it private.'); }
+  catch { prompt('Copy this setup link:', code); }
 };
 
 // Remember the linked file handle in IndexedDB.
@@ -210,6 +211,14 @@ $('file').onchange = async e => {
   catch (err) { say('Import failed: ' + err.message); }
   e.target.value = '';
 };
+if (location.hash.startsWith('#setup=')) {
+  try {
+    const c = JSON.parse(atob(decodeURIComponent(location.hash.slice(7))));
+    if (!c.token || !c.gistId) throw new Error('bad link');
+    localStorage[CK] = JSON.stringify(c); say('Cloud set up from link.');
+  } catch (e) { say('Setup link failed: ' + e.message); }
+  history.replaceState(null, '', location.pathname);
+}
 render();
 cloudSync();
 </script></body></html>
