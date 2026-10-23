@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="nb"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Todo</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:640px;margin:1rem auto;padding:0 1rem}
+  form{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+  input[type=text]{flex:1;min-width:10rem}
+  input,button{font:inherit;padding:.4rem}
+  li{display:flex;gap:.5rem;align-items:center;padding:.4rem 0;border-bottom:1px solid #ddd}
+  li .t{flex:1} li small{color:#666}
+  li.sprint{background:#fff8dc} li{flex-wrap:wrap}
+  nav button{font-weight:bold} nav .on{background:#cde}
+  .done .t{text-decoration:line-through;color:#888}
+  ul{list-style:none;padding:0} #status{color:#555;font-size:.9rem}
+  .bar{display:flex;gap:.4rem;flex-wrap:wrap;margin:.5rem 0}
+</style></head>
+<body>
+<nav class="bar">
+  <button data-page="work">WorkTODO</button>
+  <button data-page="priv">PrivTODO</button>
+  <button data-page="recurring">Tog jevnlig</button>
+</nav>
+<h1 id="h"></h1>
+<div class="bar">
+  <button id="link">Link sync file</button>
+  <button id="sync">Sync now</button>
+  <button id="export">Export</button>
+  <button id="import">Import</button>
+  <input type="file" id="file" accept=".json" hidden>
+</div>
+<div id="status"></div>
+<form id="add">
+  <input type="text" id="title" placeholder="New task" required>
+  <select id="cat"></select>
+  <select id="pri"></select>
+  <input type="date" id="due" title="Frist">
+  <button>Add</button>
+</form>
+<div id="filterbar" class="bar">Filter: <select id="fcat"></select> <label><input type="checkbox" id="fsprint"> Sprint only</label></div>
+<ul id="list"></ul>
+<script src="core.js"></script>
+<script>
+const C = TodoCore, KEY = 'todo-store';
+let store = localStorage[KEY] ? C.parse(localStorage[KEY]) : C.emptyStore();
+C.seedRecurring(store);
+let page = localStorage['todo-page'] || 'work';
+const $ = id => document.getElementById(id);
+const today = () => new Date().toISOString().slice(0, 10);
+// Dates are stored as YYYY-MM-DD. They show as dd.mm (Norwegian), or dd.mm.yyyy with full=true.
+const nb = (d, full) => d ? d.slice(8, 10) + '.' + d.slice(5, 7) + (full ? '.' + d.slice(0, 4) : '') : '';
+const say = m => $('status').textContent = m;
+const opt = (sel, v, t) => sel.add(new Option(t, v));
+C.CATEGORIES.forEach(c => { opt($('cat'), c, c); });
+opt($('fcat'), '', 'All categories'); C.CATEGORIES.forEach(c => opt($('fcat'), c, c));
+opt($('pri'), '', 'Priority'); Object.entries(C.PRIORITIES).forEach(([k, v]) => opt($('pri'), k, v));
+$('fcat').onchange = $('fsprint').onchange = () => render();
+const save = () => { localStorage[KEY] = JSON.stringify(store); render(); };
+
+// Remember the linked file handle in IndexedDB.
+const idb = (mode, fn) => new Promise((res, rej) => {
+  const r = indexedDB.open('todo', 1);
+  r.onupgradeneeded = () => r.result.createObjectStore('kv');
+  r.onsuccess = () => { const s = r.result.transaction('kv', mode).objectStore('kv'); const q = fn(s); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); };
+  r.onerror = () => rej(r.error);
+});
+
+function render() {
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.page === page));
+  $('h').textContent = { work: 'WorkTODO', priv: 'PrivTODO', recurring: 'Tog jevnlig' }[page];
+  $('add').hidden = page === 'recurring';
+  $('cat').hidden = $('pri').hidden = $('due').hidden = page !== 'priv';
+  $('filterbar').hidden = page !== 'priv';
+  const items = C.activeItems(store).filter(i => (i.list || 'work') === page);
+  const fc = $('fcat').value, fs = $('fsprint').checked;
+  const shown = page === 'priv' ? items.filter(i => (!fc || i.category === fc) && (!fs || i.sprint)) : items;
+  items.length = 0; items.push(...shown);
+  if (page === 'priv') items.sort((a, b) => (a.done - b.done) || (b.sprint - a.sprint) || ((a.priority || 9) - (b.priority || 9)) || ((a.dueDate || '9') < (b.dueDate || '9') ? -1 : (a.dueDate || '9') > (b.dueDate || '9') ? 1 : 0) || (a.createdAt < b.createdAt ? -1 : 1));
+  else if (page === 'recurring') items.sort((a, b) => (a.lastPerformed || '') < (b.lastPerformed || '') ? -1 : (a.lastPerformed || '') > (b.lastPerformed || '') ? 1 : a.title.localeCompare(b.title));
+  else items.sort((a, b) => (a.done - b.done) || (a.createdAt < b.createdAt ? -1 : 1));
+  $('list').innerHTML = '';
+  for (const it of items) {
+    const li = document.createElement('li');
+    li.className = (it.done ? 'done ' : '') + (it.sprint && !it.done ? 'sprint' : '');
+    li.innerHTML = '<span class="t"></span><small></small><button class="a"></button>';
+    li.querySelector('.t').textContent = it.title;
+    const btn = li.querySelector('.a'), sm = li.querySelector('small');
+    if (page === 'recurring') {
+      sm.textContent = 'Sist: ' + (nb(it.lastPerformed) || 'aldri');
+      btn.textContent = 'Gjort i dag';
+      btn.onclick = () => { C.updateItem(store, it.id, { lastPerformed: today() }); save(); };
+    } else {
+      if (page === 'priv') {
+        const bits = [it.category, it.priority && 'Prio: ' + C.PRIORITIES[it.priority], it.dueDate && 'Frist: ' + nb(it.dueDate)].filter(Boolean);
+        sm.textContent = bits.join(' · ');
+        const sp = document.createElement('button'); sp.textContent = it.sprint ? 'Remove from sprint' : 'Add to sprint';
+        sp.onclick = () => { C.updateItem(store, it.id, { sprint: !it.sprint }); save(); };
+        li.insertBefore(sp, btn);
+      }
+      btn.textContent = it.done ? 'Reopen' : 'Done';
+      btn.onclick = () => { C.updateItem(store, it.id, { done: !it.done }); save(); };
+      const del = document.createElement('button'); del.textContent = 'Delete';
+      del.onclick = () => { C.deleteItem(store, it.id); save(); };
+      li.appendChild(del);
+    }
+    $('list').appendChild(li);
+  }
+}
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => { page = b.dataset.page; localStorage['todo-page'] = page; render(); });
+
+$('add').onsubmit = e => {
+  e.preventDefault();
+  const f = { list: page };
+  if (page === 'priv') Object.assign(f, { category: $('cat').value, priority: +$('pri').value || null, dueDate: $('due').value || null });
+  C.addItem(store, $('title').value.trim(), f);
+  $('title').value = ''; $('pri').value = ''; $('due').value = ''; save();
+};
+
+$('link').onclick = async () => {
+  if (!window.showSaveFilePicker) return say('Linking is not supported here. Use Export and Import.');
+  try {
+    const h = await showOpenFilePicker({ types: [{ accept: { 'application/json': ['.json'] } }] }).then(x => x[0])
+      .catch(() => showSaveFilePicker({ suggestedName: 'todo-data.json' }));
+    await idb('readwrite', s => s.put(h, 'handle'));
+    say('Linked: ' + h.name); await sync();
+  } catch (e) { say('Link failed: ' + e.message); }
+};
+
+async function sync() {
+  const h = await idb('readonly', s => s.get('handle')).catch(() => null);
+  if (!h) return say('No sync file linked.');
+  if (await h.requestPermission({ mode: 'readwrite' }) !== 'granted') return say('Permission denied.');
+  const text = await (await h.getFile()).text();
+  if (text.trim()) store = C.merge(store, C.parse(text));
+  C.seedRecurring(store);
+  const w = await h.createWritable(); await w.write(JSON.stringify(store, null, 2)); await w.close();
+  save(); say('Synced ' + new Date().toLocaleTimeString());
+}
+$('sync').onclick = () => sync().catch(e => say('Sync failed: ' + e.message));
+
+$('export').onclick = () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(store, null, 2)], { type: 'application/json' }));
+  a.download = 'todo-data.json'; a.click();
+};
+$('import').onclick = () => $('file').click();
+$('file').onchange = async e => {
+  try { store = C.merge(store, C.parse(await e.target.files[0].text())); save(); say('Imported and merged.'); }
+  catch (err) { say('Import failed: ' + err.message); }
+  e.target.value = '';
+};
+render();
+</script></body></html>
