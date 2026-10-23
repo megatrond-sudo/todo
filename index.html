@@ -26,6 +26,8 @@
 <div class="bar">
   <button id="link">Link sync file</button>
   <button id="sync">Sync now</button>
+  <button id="cloud">Cloud setup</button>
+  <button id="code">Copy setup code</button>
   <button id="export">Export</button>
   <button id="import">Import</button>
   <input type="file" id="file" accept=".json" hidden>
@@ -56,7 +58,62 @@ C.CATEGORIES.forEach(c => { opt($('cat'), c, c); });
 opt($('fcat'), '', 'All categories'); C.CATEGORIES.forEach(c => opt($('fcat'), c, c));
 opt($('pri'), '', 'Priority'); Object.entries(C.PRIORITIES).forEach(([k, v]) => opt($('pri'), k, v));
 $('fcat').onchange = $('fsprint').onchange = () => render();
-const save = () => { localStorage[KEY] = JSON.stringify(store); render(); };
+const persist = () => { localStorage[KEY] = JSON.stringify(store); render(); };
+const save = () => { persist(); scheduleCloud(); };
+
+// ---- Cloud sync through a private GitHub Gist (works on any device, no DNB account needed) ----
+const CK = 'todo-cloud';   // { token, gistId }
+const cfg = () => { try { return JSON.parse(localStorage[CK] || 'null'); } catch { return null; } };
+const FILE = 'todo-data.json';
+async function gh(path, opt = {}) {
+  const c = cfg();
+  const r = await fetch('https://api.github.com' + path, { ...opt, headers: { Authorization: 'Bearer ' + c.token, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' } });
+  if (!r.ok) throw new Error('GitHub ' + r.status);
+  return r.json();
+}
+let busy = false, again = false, timer;
+async function cloudSync() {
+  const c = cfg(); if (!c) return false;
+  if (busy) { again = true; return true; }
+  busy = true;
+  try {
+    say('Syncing…');
+    const g = await gh('/gists/' + c.gistId);
+    let f = g.files[FILE], text = f ? (f.truncated ? await (await fetch(f.raw_url)).text() : f.content) : '';
+    const remote = text.trim() ? C.parse(text) : C.emptyStore();
+    const merged = C.merge(store, remote);
+    const out = JSON.stringify(merged, null, 2);
+    const changedRemote = JSON.stringify(C.merge(remote, remote)) !== JSON.stringify(merged);
+    store = merged; C.seedRecurring(store); persist();
+    if (changedRemote || !f) await gh('/gists/' + c.gistId, { method: 'PATCH', body: JSON.stringify({ files: { [FILE]: { content: JSON.stringify(store, null, 2) } } }) });
+    say('Synced ' + new Date().toLocaleTimeString());
+  } catch (e) { say('Cloud sync failed: ' + e.message + ' (changes are kept on this device)'); }
+  finally { busy = false; if (again) { again = false; scheduleCloud(); } }
+  return true;
+}
+function scheduleCloud() { if (!cfg()) return; clearTimeout(timer); timer = setTimeout(cloudSync, 1500); }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) cloudSync(); });
+addEventListener('online', cloudSync);
+
+$('cloud').onclick = async () => {
+  const code = prompt('Paste a setup code from another device.\nLeave empty to create new cloud storage (you need a GitHub token with "gist" permission).');
+  try {
+    if (code) { localStorage[CK] = atob(code.trim()); }
+    else {
+      const token = prompt('Paste your GitHub token (classic, "gist" permission only):'); if (!token) return;
+      localStorage[CK] = JSON.stringify({ token: token.trim(), gistId: '' });
+      const g = await gh('/gists', { method: 'POST', body: JSON.stringify({ description: 'todo-sync data', public: false, files: { [FILE]: { content: JSON.stringify(store, null, 2) } } }) });
+      localStorage[CK] = JSON.stringify({ token: token.trim(), gistId: g.id });
+    }
+    await cloudSync();
+  } catch (e) { localStorage.removeItem(CK); say('Setup failed: ' + e.message); }
+};
+$('code').onclick = async () => {
+  if (!cfg()) return say('Set up cloud first.');
+  const code = btoa(localStorage[CK]);
+  try { await navigator.clipboard.writeText(code); say('Setup code copied. Paste it in "Cloud setup" on the other device. Keep it private.'); }
+  catch { prompt('Copy this setup code:', code); }
+};
 
 // Remember the linked file handle in IndexedDB.
 const idb = (mode, fn) => new Promise((res, rej) => {
@@ -137,7 +194,7 @@ async function sync() {
   const w = await h.createWritable(); await w.write(JSON.stringify(store, null, 2)); await w.close();
   save(); say('Synced ' + new Date().toLocaleTimeString());
 }
-$('sync').onclick = () => sync().catch(e => say('Sync failed: ' + e.message));
+$('sync').onclick = async () => { if (!(await cloudSync())) await sync().catch(e => say('Sync failed: ' + e.message)); };
 
 $('export').onclick = () => {
   const a = document.createElement('a');
@@ -151,4 +208,5 @@ $('file').onchange = async e => {
   e.target.value = '';
 };
 render();
+cloudSync();
 </script></body></html>
