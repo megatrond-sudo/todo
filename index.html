@@ -96,17 +96,20 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) clou
 addEventListener('online', cloudSync);
 
 $('cloud').onclick = async () => {
-  const code = prompt('Paste a setup code from another device.\nLeave empty to create new cloud storage (you need a GitHub token with "gist" permission).');
+  const input = (prompt('Paste EITHER your GitHub token (starts with ghp_) OR a setup code from another device:') || '').trim();
+  if (!input) return;
   try {
-    if (code) { localStorage[CK] = atob(code.trim()); }
-    else {
-      const token = prompt('Paste your GitHub token (classic, "gist" permission only):'); if (!token) return;
-      localStorage[CK] = JSON.stringify({ token: token.trim(), gistId: '' });
+    if (/^(ghp_|github_pat_)/.test(input)) {
+      localStorage[CK] = JSON.stringify({ token: input, gistId: '' });
       const g = await gh('/gists', { method: 'POST', body: JSON.stringify({ description: 'todo-sync data', public: false, files: { [FILE]: { content: JSON.stringify(store, null, 2) } } }) });
-      localStorage[CK] = JSON.stringify({ token: token.trim(), gistId: g.id });
+      localStorage[CK] = JSON.stringify({ token: input, gistId: g.id });
+    } else {
+      const c = JSON.parse(atob(input));
+      if (!c.token || !c.gistId) throw new Error('This is not a setup code');
+      localStorage[CK] = JSON.stringify(c);
     }
     await cloudSync();
-  } catch (e) { localStorage.removeItem(CK); say('Setup failed: ' + e.message); }
+  } catch (e) { localStorage.removeItem(CK); say('Setup failed: ' + e.message + ' - paste a GitHub token (ghp_...) or a setup code.'); }
 };
 $('code').onclick = async () => {
   if (!cfg()) return say('Set up cloud first.');
