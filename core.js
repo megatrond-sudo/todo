@@ -77,13 +77,39 @@
     }
   }
 
+  // Items for the "Recurring" page: [sheet id, days between, task, last done].
+  const INTERVAL_DEFAULTS = [
+    [1, 30, 'Fanelukking alle PC-er + mobil Chrome og Safari', '2022-11-05'],
+    [2, 30, 'Få notepad/papirtodos inn her', '2026-01-07'],
+    [3, 30, 'Vurdere abonnement + Altibox innhold', '2025-11-17'],
+    [4, 45, 'Regnskap update + budsjettpart', '2025-11-28'],
+    [5, 30, 'Gjennomgå pri på alle TODOs', '2026-01-08'],
+    [6, 30, 'Rydde gmail', '2026-03-10'],
+    [7, 60, 'Rydde mobil', '2025-11-04'],
+    [10, 90, 'Gjennomgå Done TODOs og 5s', '2025-11-18'],
+    [12, 75, 'Klippe håret', '2026-06-20'],
+    [14, 120, 'Rydde jobb-pc og mail', '2025-10-18'],
+    [18, 45, 'RS-tracker update', '2026-03-10'],
+    [21, 180, 'Gjennomgå bookmarks', '2025-07-02'],
+    [22, 365, 'Download barnehagebilder fra appen', '2025-05-30'],
+    [23, 180, 'Behandling/beskyttelse av sofa', '2025-08-30'],
+    [24, 180, 'Smøre garasjeport', '2026-08-25'],
+    [25, 350, 'Bestille Flexit Nordic S4 100331', '2026-09-03'],
+  ];
+  function seedInterval(store) {
+    for (const [n, days, t, last] of INTERVAL_DEFAULTS) {
+      const id = 'int-' + n;
+      if (!store.items[id]) addItem(store, t, { id, list: 'interval', intervalDays: days, lastPerformed: last }, '1970-01-01T00:00:00.000Z');
+    }
+  }
+
   function parse(text) {
     const s = JSON.parse(text);
     if (!s || typeof s.items !== 'object') throw new Error('Not a valid todo file');
     return { version: s.version || VERSION, items: s.items };
   }
 
-  const api = { VERSION, newId, emptyStore, addItem, updateItem, deleteItem, activeItems, merge, parse, seedRecurring, RECURRING_DEFAULTS, CATEGORIES, PRIORITIES };
+  const api = { VERSION, newId, emptyStore, addItem, updateItem, deleteItem, activeItems, merge, parse, seedRecurring, seedInterval, INTERVAL_DEFAULTS, RECURRING_DEFAULTS, CATEGORIES, PRIORITIES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.TodoCore = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

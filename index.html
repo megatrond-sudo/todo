@@ -16,6 +16,7 @@
   .menu button{border:0;background:none;text-align:left;padding:.6rem .8rem} .menu button:hover{background:#eef}
   dialog{max-width:32rem;width:90vw;border-radius:8px} #dtext{white-space:pre-wrap;word-break:break-word;margin-bottom:.5rem}
   #eform{display:flex;flex-direction:column;gap:.5rem} #eform textarea{min-height:5rem;font:inherit}
+  li.ov{border-left:6px solid #d32f2f;background:#fdecea} li.soon{border-left:6px solid #f57c00;background:#fff3e0} li.ok{border-left:6px solid #388e3c;background:#e8f5e9}
   li.sprint{background:#fff8dc}
   nav button{font-weight:bold} nav .on{background:#cde}
   .done .t{text-decoration:line-through;color:#888}
@@ -27,7 +28,8 @@
 <nav class="bar">
   <button data-page="work">WorkTODO</button>
   <button data-page="priv">PrivTODO</button>
-  <button data-page="recurring">Tog jevnlig</button>
+  <button data-page="recurring">Tog</button>
+  <button data-page="interval">Recurring</button>
 </nav>
 <h1 id="h"></h1>
 <div class="bar">
@@ -45,6 +47,8 @@
   <select id="cat"></select>
   <select id="pri"></select>
   <input type="date" id="due" title="Frist">
+  <input type="number" id="freq" min="1" placeholder="Hver N dager" title="Frekvens (dager)" style="width:8rem">
+  <input type="date" id="lastd" title="Sist gjort">
   <button>Add</button>
 </form>
 <div id="filterbar" class="bar">Filter: <select id="fcat"></select> <label><input type="checkbox" id="fsprint"> Sprint only</label></div>
@@ -54,13 +58,15 @@
 <dialog id="editd"><form id="eform">
   <textarea id="etitle" required></textarea>
   <select id="ecat"></select><select id="epri"></select><input type="date" id="edue" title="Frist">
+  <label id="efl">Hver <input type="number" id="efreq" min="1" style="width:5rem"> dager</label>
+  <label id="ell">Sist gjort <input type="date" id="elast"></label>
   <div class="bar"><button>Save</button><button type="button" id="ecancel">Cancel</button></div>
 </form></dialog>
 <script src="core.js"></script>
 <script>
 const C = TodoCore, KEY = 'todo-store';
 let store = localStorage[KEY] ? C.parse(localStorage[KEY]) : C.emptyStore();
-C.seedRecurring(store);
+C.seedRecurring(store); C.seedInterval(store);
 let page = localStorage['todo-page'] || 'work';
 const $ = id => document.getElementById(id);
 const today = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
@@ -98,7 +104,7 @@ async function cloudSync() {
     const merged = C.merge(store, remote);
     const out = JSON.stringify(merged, null, 2);
     const changedRemote = JSON.stringify(C.merge(remote, remote)) !== JSON.stringify(merged);
-    store = merged; C.seedRecurring(store); persist();
+    store = merged; C.seedRecurring(store); C.seedInterval(store); persist();
     if (changedRemote || !f) await gh('/gists/' + c.gistId, { method: 'PATCH', body: JSON.stringify({ files: { [FILE]: { content: JSON.stringify(store, null, 2) } } }) });
     say('Synced ' + new Date().toLocaleTimeString() + ' · cloud ' + c.gistId.slice(0, 6) + ' · ' + C.activeItems(store).length + ' items');
   } catch (e) { say('Cloud sync failed: ' + e.message + ' (changes are kept on this device)'); }
@@ -144,8 +150,9 @@ const idb = (mode, fn) => new Promise((res, rej) => {
 
 function render() {
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.page === page));
-  $('h').textContent = { work: 'WorkTODO', priv: 'PrivTODO', recurring: 'Tog jevnlig' }[page];
+  $('h').textContent = { work: 'WorkTODO', priv: 'PrivTODO', recurring: 'Tog', interval: 'Recurring' }[page];
   $('add').hidden = page === 'recurring';
+  $('freq').hidden = $('lastd').hidden = page !== 'interval';
   $('cat').hidden = $('pri').hidden = $('due').hidden = page !== 'priv';
   $('filterbar').hidden = page !== 'priv';
   const fc = $('fcat').value, fs = $('fsprint').checked;
@@ -154,16 +161,24 @@ function render() {
     .filter(i => page !== 'priv' || ((!fc || i.category === fc) && (!fs || i.sprint)));
   if (page === 'priv') items.sort((a, b) => (a.done - b.done) || (b.sprint - a.sprint) || ((a.priority || 9) - (b.priority || 9)) || ((a.dueDate || '9') < (b.dueDate || '9') ? -1 : (a.dueDate || '9') > (b.dueDate || '9') ? 1 : 0) || (a.createdAt < b.createdAt ? -1 : 1));
   else if (page === 'recurring') items.sort((a, b) => (a.lastPerformed || '') < (b.lastPerformed || '') ? -1 : (a.lastPerformed || '') > (b.lastPerformed || '') ? 1 : a.title.localeCompare(b.title));
+  else if (page === 'interval') items.sort((a, b) => (nextDue(a) || '9') < (nextDue(b) || '9') ? -1 : 1);
   else items.sort((a, b) => (a.done - b.done) || (a.createdAt < b.createdAt ? -1 : 1));
   $('list').innerHTML = '';
   for (const it of items) {
     const li = document.createElement('li');
-    li.className = (it.done ? 'done ' : '') + (it.sprint && !it.done ? 'sprint' : '');
+    const iv = it.list === 'interval';
+    li.className = iv ? ivClass(it) : (it.done ? 'done ' : '') + (it.sprint && !it.done ? 'sprint' : '');
     const main = document.createElement('div'); main.className = 'main';
     const t = document.createElement('div'); t.className = 't clamp'; t.textContent = it.title; t.onclick = () => openDetail(it.id);
     const sm = document.createElement('small'); sm.textContent = metaText(it);
     main.append(t, sm); li.append(main);
-    if (page === 'recurring') {
+    if (iv) {
+      const btn = document.createElement('button'); btn.textContent = 'Gjort i dag';
+      btn.onclick = () => { C.updateItem(store, it.id, { lastPerformed: today() }); save(); };
+      const m = document.createElement('button'); m.className = 'more'; m.textContent = '⋯'; m.title = 'Actions';
+      m.onclick = e => { e.stopPropagation(); showMenu(m, it); };
+      li.append(btn, m);
+    } else if (page === 'recurring') {
       const btn = document.createElement('button'); btn.textContent = 'Gjort i dag';
       btn.onclick = () => { C.updateItem(store, it.id, { lastPerformed: today() }); save(); };
       li.append(btn);
@@ -176,9 +191,31 @@ function render() {
   }
 }
 
+// ---- Recurring (interval) helpers ----
+const MON = ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des'];
+const dm = d => d ? d.slice(8, 10) + '/' + MON[+d.slice(5, 7) - 1] : '–';
+const dayNo = d => Math.round(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) / 864e5);
+function nextDue(it) {
+  if (!it.lastPerformed || !it.intervalDays) return null;
+  return new Date((dayNo(it.lastPerformed) + it.intervalDays) * 864e5).toISOString().slice(0, 10);
+}
+function ivDays(it) {
+  const n = nextDue(it);
+  return { since: it.lastPerformed ? dayNo(today()) - dayNo(it.lastPerformed) : null, left: n ? dayNo(n) - dayNo(today()) : null };
+}
+function ivClass(it) {
+  const { left } = ivDays(it);
+  return left === null || left < 0 ? 'ov' : left <= 7 ? 'soon' : 'ok';
+}
+function ivText(it) {
+  const { since, left } = ivDays(it);
+  return 'Hver ' + it.intervalDays + ' d · Sist: ' + dm(it.lastPerformed) + ' (' + (since === null ? '–' : since) + ' d siden) · Neste: ' + dm(nextDue(it)) + ' (' + (left === null ? '–' : left < 0 ? Math.abs(left) + ' d over' : 'om ' + left + ' d') + ')';
+}
+
 function metaText(it) {
-  if ((it.list || 'work') === 'recurring' || String(it.id).startsWith('rec-')) return 'Sist: ' + (nb(it.lastPerformed) || 'aldri');
-  if (it.list === 'priv') return [it.category, it.priority && 'Prio: ' + C.PRIORITIES[it.priority], it.dueDate && 'Frist: ' + nb(it.dueDate), it.sprint && 'Sprint'].filter(Boolean).join(' · ');
+  if (it.list === 'interval') return ivText(it);
+  if ((it.list || 'work') === 'recurring' || String(it.id).startsWith('rec-')) return 'Sist: ' + (it.lastPerformed ? dm(it.lastPerformed) : 'aldri');
+  if (it.list === 'priv') return [it.category, it.priority && 'Prio: ' + C.PRIORITIES[it.priority], it.dueDate && 'Frist: ' + dm(it.dueDate), it.sprint && 'Sprint'].filter(Boolean).join(' · ');
   return '';
 }
 
@@ -189,7 +226,7 @@ function showMenu(anchor, it) {
   closeMenu();
   const menu = document.createElement('div'); menu.className = 'menu';
   const add = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.onclick = () => { closeMenu(); fn(); }; menu.append(b); };
-  add(it.done ? 'Reopen' : 'Mark as done', () => { C.updateItem(store, it.id, { done: !it.done }); save(); });
+  if (it.list !== 'interval') add(it.done ? 'Reopen' : 'Mark as done', () => { C.updateItem(store, it.id, { done: !it.done }); save(); });
   if (it.list === 'priv') add(it.sprint ? 'Remove from sprint' : 'Add to sprint', () => { C.updateItem(store, it.id, { sprint: !it.sprint }); save(); });
   add('Edit…', () => openEdit(it.id));
   add('Delete', () => { C.deleteItem(store, it.id); save(); });
@@ -216,7 +253,9 @@ C.CATEGORIES.forEach(c => opt($('ecat'), c, c));
 opt($('epri'), '', 'Priority'); Object.entries(C.PRIORITIES).forEach(([k, v]) => opt($('epri'), k, v));
 function openEdit(id) {
   const it = store.items[id]; if (!it) return; openId = id;
-  const priv = it.list === 'priv';
+  const priv = it.list === 'priv', iv = it.list === 'interval';
+  $('efl').hidden = $('ell').hidden = !iv;
+  if (iv) { $('efreq').value = it.intervalDays || ''; $('elast').value = it.lastPerformed || ''; }
   $('etitle').value = it.title;
   $('ecat').hidden = $('epri').hidden = $('edue').hidden = !priv;
   if (priv) {
@@ -230,6 +269,7 @@ $('eform').onsubmit = e => {
   e.preventDefault();
   const it = store.items[openId], patch = { title: $('etitle').value.trim() };
   if (it.list === 'priv') Object.assign(patch, { category: $('ecat').value, priority: +$('epri').value || null, dueDate: $('edue').value || null });
+  if (it.list === 'interval') Object.assign(patch, { intervalDays: +$('efreq').value || it.intervalDays, lastPerformed: $('elast').value || null });
   C.updateItem(store, openId, patch); $('editd').close(); save();
 };
 
@@ -238,9 +278,10 @@ document.querySelectorAll('nav button').forEach(b => b.onclick = () => { page = 
 $('add').onsubmit = e => {
   e.preventDefault();
   const f = { list: page };
+  if (page === 'interval') Object.assign(f, { intervalDays: +$('freq').value || 30, lastPerformed: $('lastd').value || today() });
   if (page === 'priv') Object.assign(f, { category: $('cat').value, priority: +$('pri').value || null, dueDate: $('due').value || today() });
   C.addItem(store, $('title').value.trim(), f);
-  $('title').value = ''; $('pri').value = ''; $('due').value = ''; save();
+  $('title').value = ''; $('freq').value = ''; $('lastd').value = ''; $('pri').value = ''; $('due').value = ''; save();
 };
 
 $('link').onclick = async () => {
@@ -259,7 +300,7 @@ async function sync() {
   if (await h.requestPermission({ mode: 'readwrite' }) !== 'granted') return say('Permission denied.');
   const text = await (await h.getFile()).text();
   if (text.trim()) store = C.merge(store, C.parse(text));
-  C.seedRecurring(store);
+  C.seedRecurring(store); C.seedInterval(store);
   const w = await h.createWritable(); await w.write(JSON.stringify(store, null, 2)); await w.close();
   save(); say('Synced ' + new Date().toLocaleTimeString());
 }
