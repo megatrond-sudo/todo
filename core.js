@@ -103,13 +103,43 @@
     }
   }
 
+  // Watchlist. Source is the main service. alsoOn holds other services. who: kids | me | both.
+  const SOURCES = ['Netflix', 'Viaplay', 'Disney', 'NRK', 'TV2'];
+  const WHO = { kids: 'Barn', me: 'Meg', both: 'Sammen' };
+  const WATCH_DEFAULTS = [
+    ['Sauen Shaun: Filmen', ['Netflix']],
+    ['Kikis budservice', ['Netflix']],
+    ['Knerten', ['Viaplay', 'TV2']],
+    ['Kutoppen', ['TV2', 'Viaplay']],
+    ['Folk og røvere i Kardemomme by', ['TV2']],
+    ['Dyrene i Hakkebakkeskogen', ['NRK', 'Viaplay', 'TV2']],
+    ['Gubben og Katten', ['Viaplay', 'TV2']],
+    ['Hokus Pokus Albert Åberg', ['Viaplay', 'TV2']],
+    ['Bamse og tyvenes by', ['Viaplay']],
+    ['Bamse og heksens datter', ['Viaplay']],
+    ['Biler (Cars)', ['Disney']],
+    ['Solan og Ludvig: Jul i Flåklypa', ['Viaplay', 'TV2']],
+    ['Solan og Ludvig: Herfra til Flåklypa', ['Viaplay', 'TV2']],
+    ["Småkryp (A Bug's Life)", ['Disney']],
+    ['Paddington', ['Viaplay']],
+    ['Monsters, Inc.', ['Disney']],
+    ['Syng (Sing)', ['Viaplay', 'Netflix']],
+  ];
+  // Fixed IDs and an old timestamp: all devices make the same items, and real edits win in a merge.
+  function seedWatch(store) {
+    WATCH_DEFAULTS.forEach(([t, s], i) => {
+      const id = 'watch-' + (i + 1);
+      if (!store.items[id]) addItem(store, t, { id, list: 'watch', source: s[0], alsoOn: s.slice(1), who: 'kids', order: i + 1 }, '1970-01-01T00:00:00.000Z');
+    });
+  }
+
   function parse(text) {
     const s = JSON.parse(text);
     if (!s || typeof s.items !== 'object') throw new Error('Not a valid todo file');
     return { version: s.version || VERSION, items: s.items };
   }
 
-  const api = { VERSION, newId, emptyStore, addItem, updateItem, deleteItem, activeItems, merge, parse, seedRecurring, seedInterval, INTERVAL_DEFAULTS, RECURRING_DEFAULTS, CATEGORIES, PRIORITIES };
+  const api = { VERSION, newId, emptyStore, addItem, updateItem, deleteItem, activeItems, merge, parse, seedRecurring, seedInterval, seedWatch, SOURCES, WHO, WATCH_DEFAULTS, INTERVAL_DEFAULTS, RECURRING_DEFAULTS, CATEGORIES, PRIORITIES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.TodoCore = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
