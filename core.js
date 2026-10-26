@@ -73,7 +73,7 @@
   function seedRecurring(store) {
     for (const t of RECURRING_DEFAULTS) {
       const id = 'rec-' + slug(t);
-      if (!store.items[id]) addItem(store, t, { id, list: 'recurring' }, '1970-01-01T00:00:00.000Z');
+      if (!store.items[id]) addItem(store, t, { id, list: 'recurring', intervalDays: 30 }, '1970-01-01T00:00:00.000Z');
     }
   }
 

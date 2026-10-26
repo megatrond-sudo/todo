@@ -5,9 +5,9 @@
 <title>My Todo</title>
 <style>
   body{font-family:system-ui,sans-serif;max-width:640px;margin:1rem auto;padding:0 1rem}
-  form{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+  form{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0}
   input[type=text]{flex:1;min-width:10rem}
-  input,button{font:inherit;padding:.4rem}
+  input,button,select{font:inherit;padding:.4rem}
   li{display:flex;gap:.5rem;align-items:center;padding:.4rem .3rem;border-bottom:1px solid #ddd}
   li .main{flex:1;min-width:0} li small{color:#666}
   .clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;cursor:pointer}
@@ -15,8 +15,8 @@
   .menu{position:fixed;background:#fff;border:1px solid #999;border-radius:6px;box-shadow:0 4px 14px #0003;display:flex;flex-direction:column;min-width:11rem;z-index:10}
   .menu button{border:0;background:none;text-align:left;padding:.6rem .8rem} .menu button:hover{background:#eef}
   dialog{max-width:32rem;width:90vw;border-radius:8px} #dtext{white-space:pre-wrap;word-break:break-word;margin-bottom:.5rem}
-  #eform{display:flex;flex-direction:column;gap:.5rem} #eform textarea{min-height:5rem;font:inherit}
-  li.ov{border-left:6px solid #d32f2f;background:#fdecea} li.soon{border-left:6px solid #f57c00;background:#fff3e0} li.ok{border-left:6px solid #388e3c;background:#e8f5e9}
+  #eform{display:flex;flex-direction:column;gap:.5rem;margin:0} #eform textarea{min-height:5rem;font:inherit}
+  li.ov{border-left:6px solid #d32f2f;background:#fdecea} li.soon{border-left:6px solid #f57c00;background:#fff3e0} li.ok{border-left:6px solid #388e3c;background:#e8f5e9} li.nofreq{border-left:6px solid #9e9e9e;background:#f2f2f2}
   li.w-kids{border-left:6px solid #1e88e5;background:#e3f2fd} li.w-me{border-left:6px solid #8e24aa;background:#f3e5f5} li.w-both{border-left:6px solid #d81b60;background:#fce4ec}
   .mv{padding:.2rem .4rem;font-size:.8rem}
   li.sprint{background:#fff8dc}
@@ -24,46 +24,51 @@
   .done .t{text-decoration:line-through;color:#888}
   [hidden]{display:none!important}
   ul{list-style:none;padding:0} #status{color:#555;font-size:.9rem}
-  .bar{display:flex;gap:.4rem;flex-wrap:wrap;margin:.5rem 0}
+  .bar{display:flex;gap:.4rem;flex-wrap:wrap;margin:.5rem 0;align-items:center}
+  details{margin-top:1.5rem;color:#555}
 </style></head>
 <body>
 <nav class="bar">
   <button data-page="work">WorkTODO</button>
   <button data-page="priv">PrivTODO</button>
+  <button data-page="backlog">Backlog</button>
+  <button data-page="quick">Quick</button>
   <button data-page="recurring">Tog</button>
   <button data-page="interval">Recurring</button>
   <button data-page="watch">Watchlist</button>
 </nav>
 <h1 id="h"></h1>
-<div class="bar">
-  <button id="link">Link sync file</button>
-  <button id="sync">Sync now</button>
-  <button id="cloud">Cloud setup</button>
-  <button id="code">Copy setup code</button>
-  <button id="export">Export</button>
-  <button id="import">Import</button>
-  <input type="file" id="file" accept=".json" hidden>
-</div>
 <div id="status"></div>
+<div id="sortbar" class="bar">Sorter: <select id="skey"></select> <select id="sdir"></select></div>
 <form id="add">
   <input type="text" id="title" placeholder="New task" required>
   <select id="cat"></select>
   <select id="pri"></select>
   <input type="date" id="due" title="Frist">
-  <input type="number" id="freq" min="1" placeholder="Hver N dager" title="Frekvens (dager)" style="width:8rem">
+  <input type="number" id="freq" min="1" step="1" placeholder="Hver N dager" title="Frekvens (dager)" style="width:8rem">
   <input type="date" id="lastd" title="Sist gjort">
   <select id="wsrc"></select><select id="wwho"></select>
   <button>Add</button>
 </form>
 <div id="filterbar" class="bar">Filter: <select id="fcat"></select> <label><input type="checkbox" id="fsprint"> Sprint only</label></div>
 <div id="wfilter" class="bar">Filter: <select id="fsrc"></select> <select id="fwho"></select> <label><input type="checkbox" id="fshow"> Show watched</label></div>
+<div id="qfilter" class="bar"><label><input type="checkbox" id="fqdone"> Vis ferdige</label></div>
 <ul id="list"></ul>
+<details id="settings"><summary>Innstillinger (ny enhet, sikkerhetskopi)</summary>
+  <div class="bar">
+    <button id="cloud">Cloud setup</button>
+    <button id="code">Copy setup code</button>
+    <button id="export">Export</button>
+    <button id="import">Import</button>
+    <input type="file" id="file" accept=".json" hidden>
+  </div>
+</details>
 <dialog id="detail"><div id="dtext"></div><small id="dmeta"></small>
   <div class="bar"><button id="dedit">Edit</button><button id="dclose">Close</button></div></dialog>
 <dialog id="editd"><form id="eform">
   <textarea id="etitle" required></textarea>
   <select id="ecat"></select><select id="esrc"></select><select id="ewho"></select><select id="epri"></select><input type="date" id="edue" title="Frist">
-  <label id="efl">Hver <input type="number" id="efreq" min="1" style="width:5rem"> dager</label>
+  <label id="efl">Hver <input type="number" id="efreq" min="1" step="1" style="width:5rem"> dager</label>
   <label id="ell">Sist gjort <input type="date" id="elast"></label>
   <div class="bar"><button>Save</button><button type="button" id="ecancel">Cancel</button></div>
 </form></dialog>
@@ -75,16 +80,15 @@ C.seedRecurring(store); C.seedInterval(store); C.seedWatch(store);
 let page = localStorage['todo-page'] || 'work';
 const $ = id => document.getElementById(id);
 const today = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
-// Dates are stored as YYYY-MM-DD. They show as dd.mm (Norwegian), or dd.mm.yyyy with full=true.
-const nb = (d, full) => d ? d.slice(8, 10) + '.' + d.slice(5, 7) + (full ? '.' + d.slice(0, 4) : '') : '';
 const say = m => $('status').textContent = m;
 const opt = (sel, v, t) => sel.add(new Option(t, v));
+const pageOf = i => String(i.id).startsWith('rec-') ? 'recurring' : (i.list || 'work');
 C.CATEGORIES.forEach(c => { opt($('cat'), c, c); });
 C.SOURCES.forEach(s => { opt($('wsrc'), s, s); opt($('esrc'), s, s); });
 Object.entries(C.WHO).forEach(([k, v]) => { opt($('wwho'), k, v); opt($('ewho'), k, v); });
 opt($('fsrc'), '', 'All sources'); C.SOURCES.forEach(s => opt($('fsrc'), s, s));
 opt($('fwho'), '', 'Everyone'); Object.entries(C.WHO).forEach(([k, v]) => opt($('fwho'), k, v));
-$('fsrc').onchange = $('fwho').onchange = $('fshow').onchange = () => render();
+$('fsrc').onchange = $('fwho').onchange = $('fshow').onchange = $('fqdone').onchange = () => render();
 opt($('fcat'), '', 'All categories'); C.CATEGORIES.forEach(c => opt($('fcat'), c, c));
 opt($('pri'), '', 'Priority'); Object.entries(C.PRIORITIES).forEach(([k, v]) => opt($('pri'), k, v));
 $('fcat').onchange = $('fsprint').onchange = () => render();
@@ -150,106 +154,162 @@ $('code').onclick = async () => {
   catch { prompt('Copy this setup link:', code); }
 };
 
-// Remember the linked file handle in IndexedDB.
-const idb = (mode, fn) => new Promise((res, rej) => {
-  const r = indexedDB.open('todo', 1);
-  r.onupgradeneeded = () => r.result.createObjectStore('kv');
-  r.onsuccess = () => { const s = r.result.transaction('kv', mode).objectStore('kv'); const q = fn(s); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); };
-  r.onerror = () => rej(r.error);
-});
-
-function render() {
-  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.page === page));
-  $('h').textContent = { work: 'WorkTODO', priv: 'PrivTODO', recurring: 'Tog', interval: 'Recurring', watch: 'Watchlist' }[page];
-  $('wsrc').hidden = $('wwho').hidden = $('wfilter').hidden = page !== 'watch';
-  $('add').hidden = page === 'recurring';
-  $('freq').hidden = $('lastd').hidden = page !== 'interval';
-  $('cat').hidden = $('pri').hidden = $('due').hidden = page !== 'priv';
-  $('filterbar').hidden = page !== 'priv';
-  const fc = $('fcat').value, fs = $('fsprint').checked;
-  const items = C.activeItems(store)
-    .filter(i => (String(i.id).startsWith('rec-') ? 'recurring' : (i.list || 'work')) === page)
-    .filter(i => page !== 'watch' || ((!$('fsrc').value || i.source === $('fsrc').value) && (!$('fwho').value || i.who === $('fwho').value) && ($('fshow').checked || !i.done)))
-    .filter(i => page !== 'priv' || ((!fc || i.category === fc) && (!fs || i.sprint)));
-  if (page === 'priv') items.sort((a, b) => (a.done - b.done) || (b.sprint - a.sprint) || ((a.priority || 9) - (b.priority || 9)) || ((a.dueDate || '9') < (b.dueDate || '9') ? -1 : (a.dueDate || '9') > (b.dueDate || '9') ? 1 : 0) || (a.createdAt < b.createdAt ? -1 : 1));
-  else if (page === 'recurring') items.sort((a, b) => (a.lastPerformed || '') < (b.lastPerformed || '') ? -1 : (a.lastPerformed || '') > (b.lastPerformed || '') ? 1 : a.title.localeCompare(b.title));
-  else if (page === 'watch') items.sort((a, b) => ((a.order || 0) - (b.order || 0)) || (a.createdAt < b.createdAt ? -1 : 1));
-  else if (page === 'interval') items.sort((a, b) => (nextDue(a) || '9') < (nextDue(b) || '9') ? -1 : 1);
-  else items.sort((a, b) => (a.done - b.done) || (a.createdAt < b.createdAt ? -1 : 1));
-  $('list').innerHTML = '';
-  for (const [idx, it] of items.entries()) {
-    const li = document.createElement('li');
-    const iv = it.list === 'interval';
-    const w = it.list === 'watch';
-    li.className = w ? 'w-' + it.who + (it.done ? ' done' : '') : iv ? ivClass(it) : (it.done ? 'done ' : '') + (it.sprint && !it.done ? 'sprint' : '');
-    const main = document.createElement('div'); main.className = 'main';
-    const t = document.createElement('div'); t.className = 't clamp'; t.textContent = it.title; t.onclick = () => openDetail(it.id);
-    const sm = document.createElement('small'); sm.textContent = metaText(it);
-    main.append(t, sm); li.append(main);
-    if (w) {
-      const up = document.createElement('button'); up.className = 'mv'; up.textContent = '▲'; up.title = 'Move up'; up.disabled = idx === 0;
-      up.onclick = () => moveItem(it, items[idx - 1]);
-      const dn = document.createElement('button'); dn.className = 'mv'; dn.textContent = '▼'; dn.title = 'Move down'; dn.disabled = idx === items.length - 1;
-      dn.onclick = () => moveItem(it, items[idx + 1]);
-      const m = document.createElement('button'); m.className = 'more'; m.textContent = '⋯'; m.title = 'Actions';
-      m.onclick = e => { e.stopPropagation(); showMenu(m, it); };
-      li.append(up, dn, m);
-    } else if (iv) {
-      const btn = document.createElement('button'); btn.textContent = 'Gjort i dag';
-      btn.onclick = () => { C.updateItem(store, it.id, { lastPerformed: today() }); save(); };
-      const m = document.createElement('button'); m.className = 'more'; m.textContent = '⋯'; m.title = 'Actions';
-      m.onclick = e => { e.stopPropagation(); showMenu(m, it); };
-      li.append(btn, m);
-    } else if (page === 'recurring') {
-      const btn = document.createElement('button'); btn.textContent = 'Gjort i dag';
-      btn.onclick = () => { C.updateItem(store, it.id, { lastPerformed: today() }); save(); };
-      li.append(btn);
-    } else {
-      const m = document.createElement('button'); m.className = 'more'; m.textContent = '⋯'; m.title = 'Actions';
-      m.onclick = e => { e.stopPropagation(); showMenu(m, it); };
-      li.append(m);
-    }
-    $('list').appendChild(li);
-  }
-}
-
-// Swap the order of two watchlist items (neighbours in the current view).
-function moveItem(a, b) {
-  if (!b) return;
-  const all = C.activeItems(store).filter(i => i.list === 'watch').sort((x, y) => (x.order || 0) - (y.order || 0) || (x.createdAt < y.createdAt ? -1 : 1));
-  all.forEach((i, n) => { if (i.order !== n + 1) C.updateItem(store, i.id, { order: n + 1 }); });  // make orders unique first
-  const oa = store.items[a.id].order, ob = store.items[b.id].order;
-  C.updateItem(store, a.id, { order: ob }); C.updateItem(store, b.id, { order: oa });
-  save();
-}
-
-// ---- Recurring (interval) helpers ----
+function pageTitle() { return { work: 'WorkTODO', priv: 'PrivTODO', backlog: 'Backlog', quick: 'Quick', recurring: 'Tog', interval: 'Recurring', watch: 'Watchlist' }[page]; }
+const FQ = ['recurring', 'interval'];
+// Tog items without a saved frequency count as 30 days.
+const fOf = it => it.intervalDays || (pageOf(it) === 'recurring' ? 30 : null);   // pages with a frequency
 const MON = ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des'];
 const dm = d => d ? d.slice(8, 10) + '/' + MON[+d.slice(5, 7) - 1] : '–';
 const dayNo = d => Math.round(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) / 864e5);
+
+// ---- Frequency pages (Tog and Recurring) ----
 function nextDue(it) {
-  if (!it.lastPerformed || !it.intervalDays) return null;
-  return new Date((dayNo(it.lastPerformed) + it.intervalDays) * 864e5).toISOString().slice(0, 10);
+  if (!it.lastPerformed || !fOf(it)) return null;
+  return new Date((dayNo(it.lastPerformed) + fOf(it)) * 864e5).toISOString().slice(0, 10);
 }
 function ivDays(it) {
   const n = nextDue(it);
   return { since: it.lastPerformed ? dayNo(today()) - dayNo(it.lastPerformed) : null, left: n ? dayNo(n) - dayNo(today()) : null };
 }
+// Recurring: red = overdue, orange = due in 7 days, green = other.
 function ivClass(it) {
   const { left } = ivDays(it);
   return left === null || left < 0 ? 'ov' : left <= 7 ? 'soon' : 'ok';
 }
+// Tog: red = never done, or more than 14 days over the frequency. Orange = from 7 days before to 14 days after. Green = other.
+function togClass(it) {
+  if (!it.lastPerformed) return 'ov';
+  if (!fOf(it)) return 'nofreq';
+  const d = ivDays(it).since - fOf(it);
+  return d > 14 ? 'ov' : d >= -7 ? 'soon' : 'ok';
+}
+// How red an item is: higher = more overdue. Never done = most red. No frequency = no score.
+function togScore(it) {
+  if (!it.lastPerformed) return 1e9;
+  return fOf(it) ? ivDays(it).since - fOf(it) : null;
+}
 function ivText(it) {
   const { since, left } = ivDays(it);
-  return 'Hver ' + it.intervalDays + ' d · Sist: ' + dm(it.lastPerformed) + ' (' + (since === null ? '–' : since) + ' d siden) · Neste: ' + dm(nextDue(it)) + ' (' + (left === null ? '–' : left < 0 ? Math.abs(left) + ' d over' : 'om ' + left + ' d') + ')';
+  const f = fOf(it) ? 'Hver ' + fOf(it) + ' d' : 'Frekvens ikke satt';
+  const s = 'Sist: ' + (it.lastPerformed ? dm(it.lastPerformed) + ' (' + since + ' d siden)' : 'aldri');
+  if (it.list === 'recurring' && fOf(it)) {
+    const d = it.lastPerformed ? since - fOf(it) : null;
+    return [f, s, 'Neste: ' + dm(nextDue(it)) + (d === null ? '' : d < 0 ? ' (om ' + -d + ' d)' : ' (' + d + ' d over)')].join(' · ');
+  }
+  return [f, s, 'Neste: ' + dm(nextDue(it)) + (left === null ? '' : left < 0 ? ' (' + -left + ' d over)' : ' (om ' + left + ' d)')].join(' · ');
 }
 
 function metaText(it) {
-  if (it.list === 'watch') return [it.source, it.alsoOn && it.alsoOn.length && 'Også: ' + it.alsoOn.join(', '), C.WHO[it.who]].filter(Boolean).join(' · ');
-  if (it.list === 'interval') return ivText(it);
-  if ((it.list || 'work') === 'recurring' || String(it.id).startsWith('rec-')) return 'Sist: ' + (it.lastPerformed ? dm(it.lastPerformed) : 'aldri');
-  if (it.list === 'priv') return [it.category, it.priority && 'Prio: ' + C.PRIORITIES[it.priority], it.dueDate && 'Frist: ' + dm(it.dueDate), it.sprint && 'Sprint'].filter(Boolean).join(' · ');
+  const p = pageOf(it);
+  if (p === 'watch') return [it.source, it.alsoOn && it.alsoOn.length && 'Også: ' + it.alsoOn.join(', '), C.WHO[it.who]].filter(Boolean).join(' · ');
+  if (FQ.includes(p)) return ivText(it);
+  if (p === 'priv') return [it.category, it.priority && 'Prio: ' + C.PRIORITIES[it.priority], it.dueDate && 'Frist: ' + dm(it.dueDate), it.sprint && 'Sprint'].filter(Boolean).join(' · ');
   return '';
+}
+
+// ---- Sorting ----
+const text = f => ({ type: 'text', get: i => { const v = f(i); return v ? String(v).toLowerCase() : null; } });
+const SORTS = {
+  work: { manual: { label: 'Manuell rekkefølge', manual: true }, name: { label: 'Navn', ...text(i => i.title) }, created: { label: 'Opprettet', type: 'date', get: i => i.createdAt } },
+  priv: { manual: { label: 'Manuell rekkefølge', manual: true }, name: { label: 'Navn', ...text(i => i.title) }, due: { label: 'Frist', type: 'date', get: i => i.dueDate }, pri: { label: 'Prioritet', type: 'pri', get: i => i.priority }, cat: { label: 'Kategori', ...text(i => i.category) }, created: { label: 'Opprettet', type: 'date', get: i => i.createdAt } },
+  backlog: { created: { label: 'Opprettet', type: 'date', get: i => i.createdAt }, name: { label: 'Navn', ...text(i => i.title) } },
+  quick: { created: { label: 'Opprettet', type: 'date', get: i => i.createdAt }, name: { label: 'Navn', ...text(i => i.title) } },
+  recurring: { red: { label: 'Mest røde', type: 'red', get: togScore }, name: { label: 'Navn', ...text(i => i.title) }, last: { label: 'Sist gjort', type: 'date', get: i => i.lastPerformed }, next: { label: 'Neste', type: 'date', get: nextDue }, freq: { label: 'Frekvens', type: 'num', get: fOf } },
+  interval: { next: { label: 'Neste', type: 'date', get: nextDue }, name: { label: 'Navn', ...text(i => i.title) }, last: { label: 'Sist gjort', type: 'date', get: i => i.lastPerformed }, freq: { label: 'Frekvens', type: 'num', get: fOf } },
+  watch: { manual: { label: 'Manuell rekkefølge', manual: true }, name: { label: 'Navn', ...text(i => i.title) }, src: { label: 'Kilde', ...text(i => i.source) }, who: { label: 'For hvem', type: 'num', get: i => ({ kids: 1, me: 2, both: 3 })[i.who] }, created: { label: 'Opprettet', type: 'date', get: i => i.createdAt } },
+};
+const DIRS = { text: ['A–Å', 'Å–A'], date: ['Eldst først', 'Nyest først'], num: ['Lavest først', 'Høyest først'], pri: ['Høy først', 'Lav først'], red: ['Minst røde først', 'Mest røde først'] };
+const DEFAULT_SORT = { work: { key: 'manual', dir: 'asc' }, priv: { key: 'manual', dir: 'asc' }, watch: { key: 'manual', dir: 'asc' }, backlog: { key: 'created', dir: 'asc' }, quick: { key: 'created', dir: 'asc' }, recurring: { key: 'red', dir: 'desc' }, interval: { key: 'next', dir: 'asc' } };
+const SK = 'todo-sort';
+const sortAll = () => { try { return JSON.parse(localStorage[SK] || '{}'); } catch { return {}; } };
+const sortState = p => { const s = sortAll()[p]; return s && SORTS[p][s.key] ? s : DEFAULT_SORT[p]; };
+const setSort = (p, st) => { const a = sortAll(); a[p] = st; localStorage[SK] = JSON.stringify(a); render(); };
+// Empty values always go last, in both directions.
+function cmpv(x, y, dir) {
+  const nx = x == null || x === '', ny = y == null || y === '';
+  if (nx || ny) return nx && ny ? 0 : nx ? 1 : -1;
+  return (typeof x === 'string' ? x.localeCompare(y, 'nb') : x - y) * dir;
+}
+const byCreated = (a, b) => a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0;
+// The order used for items without a manual position, and for ties.
+const fallback = p => p === 'priv'
+  ? (a, b) => (!!b.sprint - !!a.sprint) || ((a.priority || 9) - (b.priority || 9)) || cmpv(a.dueDate, b.dueDate, 1) || byCreated(a, b)
+  : byCreated;
+function sortItems(items, p) {
+  const st = sortState(p), def = SORTS[p][st.key], dir = st.dir === 'desc' ? -1 : 1, fb = fallback(p);
+  items.sort((a, b) => (!!a.done - !!b.done) || (def.manual ? cmpv(a.order, b.order, 1) : cmpv(def.get(a), def.get(b), dir)) || fb(a, b));
+}
+const isManual = p => !!SORTS[p] && !!SORTS[p][sortState(p).key].manual;
+
+// Swap the manual position of two neighbours. First give every item on the page a unique position.
+function moveItem(a, b) {
+  if (!b) return;
+  const fb = fallback(page);
+  C.activeItems(store).filter(i => pageOf(i) === page).sort((x, y) => cmpv(x.order, y.order, 1) || fb(x, y))
+    .forEach((i, n) => { if (i.order !== n + 1) C.updateItem(store, i.id, { order: n + 1 }); });
+  const oa = store.items[a.id].order, ob = store.items[b.id].order;
+  C.updateItem(store, a.id, { order: ob }); C.updateItem(store, b.id, { order: oa });
+  save();
+}
+
+function buildSortBar() {
+  const st = sortState(page), def = SORTS[page][st.key];
+  $('skey').innerHTML = ''; Object.entries(SORTS[page]).forEach(([k, d]) => opt($('skey'), k, d.label));
+  $('skey').value = st.key;
+  $('sdir').innerHTML = ''; $('sdir').hidden = !!def.manual;
+  if (!def.manual) { opt($('sdir'), 'asc', DIRS[def.type][0]); opt($('sdir'), 'desc', DIRS[def.type][1]); $('sdir').value = st.dir; }
+}
+$('skey').onchange = () => { const d = SORTS[page][$('skey').value]; setSort(page, { key: $('skey').value, dir: d.type === 'red' ? 'desc' : 'asc' }); };
+$('sdir').onchange = () => setSort(page, { key: $('skey').value, dir: $('sdir').value });
+
+// ---- Render ----
+const mk = (label, cls, title, fn) => { const b = document.createElement('button'); b.textContent = label; if (cls) b.className = cls; if (title) b.title = title; b.onclick = fn; return b; };
+
+function render() {
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.page === page));
+  $('h').textContent = pageTitle();
+  const fq = FQ.includes(page);
+  $('wsrc').hidden = $('wwho').hidden = $('wfilter').hidden = page !== 'watch';
+  $('freq').hidden = $('lastd').hidden = !fq;
+  $('freq').required = fq;
+  $('cat').hidden = $('pri').hidden = $('due').hidden = page !== 'priv';
+  $('filterbar').hidden = page !== 'priv';
+  $('qfilter').hidden = page !== 'quick';
+  if (page === 'recurring') $('list').after($('add')); else $('sortbar').after($('add'));  // Tog: add form at the bottom
+  buildSortBar();
+  const fc = $('fcat').value, fs = $('fsprint').checked;
+  const items = C.activeItems(store)
+    .filter(i => pageOf(i) === page)
+    .filter(i => page !== 'watch' || ((!$('fsrc').value || i.source === $('fsrc').value) && (!$('fwho').value || i.who === $('fwho').value) && ($('fshow').checked || !i.done)))
+    .filter(i => page !== 'quick' || $('fqdone').checked || !i.done)
+    .filter(i => page !== 'priv' || ((!fc || i.category === fc) && (!fs || i.sprint)));
+  sortItems(items, page);
+  const arrows = ['work', 'priv', 'watch'].includes(page) && isManual(page);
+  $('list').innerHTML = '';
+  for (const [idx, it] of items.entries()) {
+    const li = document.createElement('li');
+    li.className = page === 'watch' ? 'w-' + it.who + (it.done ? ' done' : '')
+      : page === 'interval' ? ivClass(it) : page === 'recurring' ? togClass(it)
+      : (it.done ? 'done ' : '') + (it.sprint && !it.done ? 'sprint' : '');
+    const main = document.createElement('div'); main.className = 'main';
+    const t = document.createElement('div'); t.className = 't clamp'; t.textContent = it.title; t.onclick = () => openDetail(it.id);
+    const sm = document.createElement('small'); sm.textContent = metaText(it);
+    main.append(t, sm); li.append(main);
+    if (arrows) {
+      const prev = items[idx - 1], next = items[idx + 1];
+      const up = mk('▲', 'mv', 'Move up', () => moveItem(it, prev)); up.disabled = !prev || !!prev.done !== !!it.done;
+      const dn = mk('▼', 'mv', 'Move down', () => moveItem(it, next)); dn.disabled = !next || !!next.done !== !!it.done;
+      li.append(up, dn);
+    }
+    if (fq) li.append(mk('Gjort i dag', '', '', () => { C.updateItem(store, it.id, { lastPerformed: today() }); save(); }));
+    if (page === 'backlog') li.append(mk('→ PrivTODO', '', 'Flytt til PrivTODO', () => {
+      C.updateItem(store, it.id, { list: 'priv', category: null, priority: null, dueDate: today(), sprint: false, order: null }); save();
+    }));
+    if (page === 'quick') li.append(mk(it.done ? 'Angre' : 'Done', '', '', () => { C.updateItem(store, it.id, { done: !it.done }); save(); }));
+    const m = mk('⋯', 'more', 'Actions', e => { e.stopPropagation(); showMenu(m, it); });
+    li.append(m);
+    $('list').appendChild(li);
+  }
 }
 
 // ---- Action menu ----
@@ -257,10 +317,11 @@ function closeMenu() { document.querySelectorAll('.menu').forEach(m => m.remove(
 document.addEventListener('click', closeMenu);
 function showMenu(anchor, it) {
   closeMenu();
+  const p = pageOf(it);
   const menu = document.createElement('div'); menu.className = 'menu';
   const add = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.onclick = () => { closeMenu(); fn(); }; menu.append(b); };
-  if (it.list !== 'interval') add(it.list === 'watch' ? (it.done ? 'Unwatch' : 'Mark as watched') : it.done ? 'Reopen' : 'Mark as done', () => { C.updateItem(store, it.id, { done: !it.done }); save(); });
-  if (it.list === 'priv') add(it.sprint ? 'Remove from sprint' : 'Add to sprint', () => { C.updateItem(store, it.id, { sprint: !it.sprint }); save(); });
+  if (['work', 'priv', 'watch'].includes(p)) add(p === 'watch' ? (it.done ? 'Unwatch' : 'Mark as watched') : it.done ? 'Reopen' : 'Mark as done', () => { C.updateItem(store, it.id, { done: !it.done }); save(); });
+  if (p === 'priv') add(it.sprint ? 'Remove from sprint' : 'Add to sprint', () => { C.updateItem(store, it.id, { sprint: !it.sprint }); save(); });
   add('Edit…', () => openEdit(it.id));
   add('Delete', () => { C.deleteItem(store, it.id); save(); });
   document.body.append(menu);
@@ -274,7 +335,6 @@ let openId = null;
 function openDetail(id) {
   const it = store.items[id]; if (!it) return; openId = id;
   $('dtext').textContent = it.title; $('dmeta').textContent = metaText(it);
-  $('dedit').hidden = (it.list || 'work') === 'recurring';
   $('detail').showModal();
 }
 $('dclose').onclick = () => $('detail').close();
@@ -286,12 +346,11 @@ C.CATEGORIES.forEach(c => opt($('ecat'), c, c));
 opt($('epri'), '', 'Priority'); Object.entries(C.PRIORITIES).forEach(([k, v]) => opt($('epri'), k, v));
 function openEdit(id) {
   const it = store.items[id]; if (!it) return; openId = id;
-  const priv = it.list === 'priv', iv = it.list === 'interval';
-  $('efl').hidden = $('ell').hidden = !iv;
-  if (iv) { $('efreq').value = it.intervalDays || ''; $('elast').value = it.lastPerformed || ''; }
+  const p = pageOf(it), priv = p === 'priv', fq = FQ.includes(p), wt = p === 'watch';
   $('etitle').value = it.title;
+  $('efl').hidden = $('ell').hidden = !fq;
+  if (fq) { $('efreq').value = fOf(it) || ''; $('elast').value = it.lastPerformed || ''; }
   $('ecat').hidden = $('epri').hidden = $('edue').hidden = !priv;
-  const wt = it.list === 'watch';
   $('esrc').hidden = $('ewho').hidden = !wt;
   if (wt) {
     if (it.source && ![...$('esrc').options].some(o => o.value === it.source)) opt($('esrc'), it.source, it.source);
@@ -306,10 +365,10 @@ function openEdit(id) {
 $('ecancel').onclick = () => $('editd').close();
 $('eform').onsubmit = e => {
   e.preventDefault();
-  const it = store.items[openId], patch = { title: $('etitle').value.trim() };
-  if (it.list === 'priv') Object.assign(patch, { category: $('ecat').value, priority: +$('epri').value || null, dueDate: $('edue').value || null });
-  if (it.list === 'watch') Object.assign(patch, { source: $('esrc').value, who: $('ewho').value });
-  if (it.list === 'interval') Object.assign(patch, { intervalDays: +$('efreq').value || it.intervalDays, lastPerformed: $('elast').value || null });
+  const it = store.items[openId], p = pageOf(it), patch = { title: $('etitle').value.trim() };
+  if (p === 'priv') Object.assign(patch, { category: $('ecat').value, priority: +$('epri').value || null, dueDate: $('edue').value || null });
+  if (p === 'watch') Object.assign(patch, { source: $('esrc').value, who: $('ewho').value });
+  if (FQ.includes(p)) Object.assign(patch, { intervalDays: Math.round(+$('efreq').value) || null, lastPerformed: $('elast').value || null });
   C.updateItem(store, openId, patch); $('editd').close(); save();
 };
 
@@ -322,33 +381,11 @@ $('add').onsubmit = e => {
     const mx = Math.max(0, ...C.activeItems(store).filter(i => i.list === 'watch').map(i => i.order || 0));
     Object.assign(f, { source: $('wsrc').value, who: $('wwho').value, alsoOn: [], order: mx + 1 });
   }
-  if (page === 'interval') Object.assign(f, { intervalDays: +$('freq').value || 30, lastPerformed: $('lastd').value || today() });
+  if (FQ.includes(page)) Object.assign(f, { intervalDays: Math.round(+$('freq').value) || 30, lastPerformed: $('lastd').value || (page === 'interval' ? today() : null) });
   if (page === 'priv') Object.assign(f, { category: $('cat').value, priority: +$('pri').value || null, dueDate: $('due').value || today() });
   C.addItem(store, $('title').value.trim(), f);
   $('title').value = ''; $('freq').value = ''; $('lastd').value = ''; $('pri').value = ''; $('due').value = ''; save();
 };
-
-$('link').onclick = async () => {
-  if (!window.showSaveFilePicker) return say('Linking is not supported here. Use Export and Import.');
-  try {
-    const h = await showOpenFilePicker({ types: [{ accept: { 'application/json': ['.json'] } }] }).then(x => x[0])
-      .catch(() => showSaveFilePicker({ suggestedName: 'todo-data.json' }));
-    await idb('readwrite', s => s.put(h, 'handle'));
-    say('Linked: ' + h.name); await sync();
-  } catch (e) { say('Link failed: ' + e.message); }
-};
-
-async function sync() {
-  const h = await idb('readonly', s => s.get('handle')).catch(() => null);
-  if (!h) return say('No sync file linked.');
-  if (await h.requestPermission({ mode: 'readwrite' }) !== 'granted') return say('Permission denied.');
-  const text = await (await h.getFile()).text();
-  if (text.trim()) store = C.merge(store, C.parse(text));
-  C.seedRecurring(store); C.seedInterval(store); C.seedWatch(store);
-  const w = await h.createWritable(); await w.write(JSON.stringify(store, null, 2)); await w.close();
-  save(); say('Synced ' + new Date().toLocaleTimeString());
-}
-$('sync').onclick = async () => { if (!(await cloudSync())) await sync().catch(e => say('Sync failed: ' + e.message)); };
 
 $('export').onclick = () => {
   const a = document.createElement('a');
@@ -369,6 +406,8 @@ if (location.hash.startsWith('#setup=')) {
   } catch (e) { say('Setup link failed: ' + e.message); }
   history.replaceState(null, '', location.pathname);
 }
+if (!SORTS[page]) page = 'work';
 render();
+if (!cfg()) say('Cloud sync er ikke satt opp. Åpne Innstillinger nederst.');
 cloudSync();
 </script></body></html>
