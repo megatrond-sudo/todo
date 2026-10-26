@@ -17,7 +17,11 @@
   dialog{max-width:32rem;width:90vw;border-radius:8px} #dtext{white-space:pre-wrap;word-break:break-word;margin-bottom:.5rem}
   #eform{display:flex;flex-direction:column;gap:.5rem;margin:0} #eform textarea{min-height:5rem;font:inherit}
   li.ov{border-left:6px solid #d32f2f;background:#fdecea} li.soon{border-left:6px solid #f57c00;background:#fff3e0} li.ok{border-left:6px solid #388e3c;background:#e8f5e9} li.nofreq{border-left:6px solid #9e9e9e;background:#f2f2f2}
-  li.w-kids{border-left:6px solid #1e88e5;background:#e3f2fd} li.w-me{border-left:6px solid #8e24aa;background:#f3e5f5} li.w-both{border-left:6px solid #d81b60;background:#fce4ec}
+  li.w-kids{border-left:6px solid #1e88e5;background:#e3f2fd} li.w-me{border-left:6px solid #8e24aa;background:#f3e5f5} li.w-both{border-left:6px solid #fbc02d;background:#fff9c4}
+  li.w-kids.done{background:linear-gradient(90deg,#c8e6c9 50%,#e3f2fd 50%)} li.w-me.done{background:linear-gradient(90deg,#c8e6c9 50%,#f3e5f5 50%)} li.w-both.done{background:linear-gradient(90deg,#c8e6c9 50%,#fff9c4 50%)}
+  li.wl{padding:.1rem .3rem} li.wl .clamp{-webkit-line-clamp:1} li.wl button{padding:.1rem .4rem}
+  li.hot,li.hot.sprint,li.hot[class*=w-]{border-left:6px solid #b71c1c;background:#ffcdd2!important}
+  h1{margin:.3rem 0 .1rem} #status{margin:0 0 .3rem;min-height:1.1em}
   .mv{padding:.2rem .4rem;font-size:.8rem}
   li.sprint{background:#fff8dc}
   nav button{font-weight:bold} nav .on{background:#cde}
@@ -76,7 +80,7 @@
 <script>
 const C = TodoCore, KEY = 'todo-store';
 let store = localStorage[KEY] ? C.parse(localStorage[KEY]) : C.emptyStore();
-C.seedRecurring(store); C.seedInterval(store); C.seedWatch(store);
+C.seedRecurring(store); C.seedInterval(store); C.seedWatch(store); C.seedBacklog(store);
 let page = localStorage['todo-page'] || 'work';
 const $ = id => document.getElementById(id);
 const today = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
@@ -118,7 +122,7 @@ async function cloudSync() {
     const merged = C.merge(store, remote);
     const out = JSON.stringify(merged, null, 2);
     const changedRemote = JSON.stringify(C.merge(remote, remote)) !== JSON.stringify(merged);
-    store = merged; C.seedRecurring(store); C.seedInterval(store); C.seedWatch(store); persist();
+    store = merged; C.seedRecurring(store); C.seedInterval(store); C.seedWatch(store); C.seedBacklog(store); persist();
     if (changedRemote || !f) await gh('/gists/' + c.gistId, { method: 'PATCH', body: JSON.stringify({ files: { [FILE]: { content: JSON.stringify(store, null, 2) } } }) });
     say('Synced ' + new Date().toLocaleTimeString() + ' · cloud ' + c.gistId.slice(0, 6) + ' · ' + C.activeItems(store).length + ' items');
   } catch (e) { say('Cloud sync failed: ' + e.message + ' (changes are kept on this device)'); }
@@ -201,6 +205,7 @@ function ivText(it) {
 
 function metaText(it) {
   const p = pageOf(it);
+  if (it.hot && !it.done && p !== 'priv' && p !== 'watch') return '★ ' + dm(it.dueDate);
   if (p === 'watch') return [it.source, it.alsoOn && it.alsoOn.length && 'Også: ' + it.alsoOn.join(', '), C.WHO[it.who]].filter(Boolean).join(' · ');
   if (FQ.includes(p)) return ivText(it);
   if (p === 'priv') return [it.category, it.priority && 'Prio: ' + C.PRIORITIES[it.priority], it.dueDate && 'Frist: ' + dm(it.dueDate), it.sprint && 'Sprint'].filter(Boolean).join(' · ');
@@ -222,7 +227,8 @@ const DIRS = { text: ['A–Å', 'Å–A'], date: ['Eldst først', 'Nyest først'
 const DEFAULT_SORT = { work: { key: 'manual', dir: 'asc' }, priv: { key: 'manual', dir: 'asc' }, watch: { key: 'manual', dir: 'asc' }, backlog: { key: 'created', dir: 'asc' }, quick: { key: 'created', dir: 'asc' }, recurring: { key: 'red', dir: 'desc' }, interval: { key: 'next', dir: 'asc' } };
 const SK = 'todo-sort';
 const sortAll = () => { try { return JSON.parse(localStorage[SK] || '{}'); } catch { return {}; } };
-const sortState = p => { const s = sortAll()[p]; return s && SORTS[p][s.key] ? s : DEFAULT_SORT[p]; };
+const NOSORT = ['quick', 'recurring', 'interval'];
+const sortState = p => { const s = NOSORT.includes(p) ? null : sortAll()[p]; return s && SORTS[p][s.key] ? s : DEFAULT_SORT[p]; };
 const setSort = (p, st) => { const a = sortAll(); a[p] = st; localStorage[SK] = JSON.stringify(a); render(); };
 // Empty values always go last, in both directions.
 function cmpv(x, y, dir) {
@@ -237,7 +243,7 @@ const fallback = p => p === 'priv'
   : byCreated;
 function sortItems(items, p) {
   const st = sortState(p), def = SORTS[p][st.key], dir = st.dir === 'desc' ? -1 : 1, fb = fallback(p);
-  items.sort((a, b) => (!!a.done - !!b.done) || (def.manual ? cmpv(a.order, b.order, 1) : cmpv(def.get(a), def.get(b), dir)) || fb(a, b));
+  items.sort((a, b) => (!!a.done - !!b.done) || (!!b.hot - !!a.hot) || (def.manual ? cmpv(a.order, b.order, 1) : cmpv(def.get(a), def.get(b), dir)) || fb(a, b));
 }
 const isManual = p => !!SORTS[p] && !!SORTS[p][sortState(p).key].manual;
 
@@ -270,12 +276,13 @@ function render() {
   $('h').textContent = pageTitle();
   const fq = FQ.includes(page);
   $('wsrc').hidden = $('wwho').hidden = $('wfilter').hidden = page !== 'watch';
-  $('freq').hidden = $('lastd').hidden = !fq;
+  $('freq').hidden = !fq; $('lastd').hidden = true;
   $('freq').required = fq;
   $('cat').hidden = $('pri').hidden = $('due').hidden = page !== 'priv';
   $('filterbar').hidden = page !== 'priv';
   $('qfilter').hidden = page !== 'quick';
   if (page === 'recurring') $('list').after($('add')); else $('sortbar').after($('add'));  // Tog: add form at the bottom
+  $('sortbar').hidden = NOSORT.includes(page);
   buildSortBar();
   const fc = $('fcat').value, fs = $('fsprint').checked;
   const items = C.activeItems(store)
@@ -291,14 +298,25 @@ function render() {
     li.className = page === 'watch' ? 'w-' + it.who + (it.done ? ' done' : '')
       : page === 'interval' ? ivClass(it) : page === 'recurring' ? togClass(it)
       : (it.done ? 'done ' : '') + (it.sprint && !it.done ? 'sprint' : '');
+    if (it.hot && !it.done) li.className += ' hot';
+    if (page === 'watch') li.className += ' wl';
     const main = document.createElement('div'); main.className = 'main';
     const t = document.createElement('div'); t.className = 't clamp'; t.textContent = it.title; t.onclick = () => openDetail(it.id);
     const sm = document.createElement('small'); sm.textContent = metaText(it);
-    main.append(t, sm); li.append(main);
+    main.append(t); if (page !== 'watch') main.append(sm); li.append(main);
+    if (['work', 'priv', 'quick', 'watch'].includes(page) && !it.done)
+      li.append(mk('★', '', it.hot ? 'Fjern uthevning' : 'Utheve (rød, i dag, øverst)', () => {
+        C.updateItem(store, it.id, it.hot ? { hot: false } : { hot: true, dueDate: today() }); save();
+      }));
+    if (page === 'priv' && !it.done)
+      li.append(mk('+7d', '', 'Utsett 7 dager', () => {
+        const base = it.dueDate && it.dueDate > today() ? it.dueDate : today();
+        C.updateItem(store, it.id, { dueDate: new Date((dayNo(base) + 7) * 864e5).toISOString().slice(0, 10) }); save();
+      }));
     if (arrows) {
       const prev = items[idx - 1], next = items[idx + 1];
-      const up = mk('▲', 'mv', 'Move up', () => moveItem(it, prev)); up.disabled = !prev || !!prev.done !== !!it.done;
-      const dn = mk('▼', 'mv', 'Move down', () => moveItem(it, next)); dn.disabled = !next || !!next.done !== !!it.done;
+      const up = mk('▲', 'mv', 'Move up', () => moveItem(it, prev)); up.disabled = !prev || !!prev.done !== !!it.done || !!prev.hot !== !!it.hot;
+      const dn = mk('▼', 'mv', 'Move down', () => moveItem(it, next)); dn.disabled = !next || !!next.done !== !!it.done || !!next.hot !== !!it.hot;
       li.append(up, dn);
     }
     if (fq) li.append(mk('Gjort i dag', '', '', () => { C.updateItem(store, it.id, { lastPerformed: today() }); save(); }));
@@ -322,6 +340,7 @@ function showMenu(anchor, it) {
   const add = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.onclick = () => { closeMenu(); fn(); }; menu.append(b); };
   if (['work', 'priv', 'watch'].includes(p)) add(p === 'watch' ? (it.done ? 'Unwatch' : 'Mark as watched') : it.done ? 'Reopen' : 'Mark as done', () => { C.updateItem(store, it.id, { done: !it.done }); save(); });
   if (p === 'priv') add(it.sprint ? 'Remove from sprint' : 'Add to sprint', () => { C.updateItem(store, it.id, { sprint: !it.sprint }); save(); });
+  if (p === 'priv') add('Flytt til Backlog', () => { C.updateItem(store, it.id, { list: 'backlog', hot: false, category: null, priority: null, dueDate: null, sprint: false, order: null }); save(); });
   add('Edit…', () => openEdit(it.id));
   add('Delete', () => { C.deleteItem(store, it.id); save(); });
   document.body.append(menu);

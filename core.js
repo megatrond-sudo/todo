@@ -133,13 +133,87 @@
     });
   }
 
+  const BACKLOG_DEFAULTS = [
+    "Annet - Skaffe tattovering",
+    "Lean - Cleanout gamle PC-er",
+    "Lean - Fikse båten",
+    "Lean - Gamle stasjonær-Pcen hvordan dispose",
+    "Lean - Matassets, gameassets m/360 og gameplan",
+    "Lean - Musikkprosjekt i gammel TODO",
+    "Lean - Rydde ut av rommet i Asker",
+    "Lean - Selge pogs",
+    "Lean - Steam market rydd",
+    "Lean - Tømme ut av gamle PC-er + dispose",
+    "Lean - Videre på Bucketlist - Globalcastaway",
+    "Liste - Playlist xbox og pc | howlongtobeat.com",
+    "Org - OneNote med størrelser så det går lett å handle",
+    "Self - Begynne Diary",
+    "Self - Garmin setup",
+    "Self - Hailou AI + andre teste",
+    "Self - Karrieretenking",
+    "Self - Webinar fra Eline - https://adhdveilederen.no/webinar-utenfor-boksen/",
+    "Thought - Focusplan og kandidatliste",
+    "Thought - Hudanalyse",
+    "Thought - Modell for kvantifisering av lykke",
+    "Thought - Research hairloss (hairloss show på youtube)",
+    "Thought - Søndags180",
+    "Øko - Vurdere ekstra pensjonssparing",
+    "TrueTrim fylle ut videre",
+    "Fikse plastelina",
+    "Fiskeruta",
+    "Finne ut hva jeg skal gjøre med pensjon meg og A. Flytte DNB. Andre leverandører? (Nordnet?). Egen sparing etter hvert?",
+    "Dressrensing",
+    "Undermapper gmail gjennomgang + reorganize numbers",
+    "Shop - Shoe cleaning kit /Bag",
+    "Måle opp 3.etasje",
+    "Bytte BankID-passord",
+    "Urtehage",
+    "Kjøpe vannslange/slangevogn ute",
+    "Kjøpe TV etter å finne ut hvor",
+    "Microsoft TODO",
+    "Beredskapsstockup",
+    "Gmail til kidsa - https://support.google.com/families/answer/7103338?hl=no",
+    "Oliver Blodprøve Ullevål?",
+    "Fotbehandling fra A sin instavideo",
+    "Google Keep/andre",
+    "Kjøpe peistilbehør",
+    "Slipshenger",
+    "Garasje Snekker / ChatGPT / pappa om garasjeloft",
+    "Asker \"mottak\"",
+    "Self - Ame-pure roller",
+    "Ikea vitrineskapet til oppe",
+    "Hedgehog adapter",
+    "Anti-se-inn greie til vinduene nede",
+    "1080-fix",
+    "Wifi garasjeport",
+    "Bytte til skytelpass",
+    "Lage personlig / familiens årshjul - APP?",
+    "Spotify ryddeprosjekt videre plan",
+    "Finne bodløsning oppe/under trapp",
+    "Lenovo vantage test",
+    "Koble strøm ordentlig på kontoret",
+    "Notes to make: Ferieregnskap over tid, barnevekt/høyde, notater og reminders hvordan er de",
+    "Ta av tilhengerfeste på CX-5",
+  ];
+  // Fixed IDs and an old timestamp: all devices make the same items, and real edits win in a merge.
+  // createdAt grows by one second per line, so the file order stays.
+  function seedBacklog(store) {
+    BACKLOG_DEFAULTS.forEach((t, i) => {
+      const id = 'backlog-' + (i + 1);
+      if (!store.items[id]) {
+        addItem(store, t, { id, list: 'backlog' }, '1970-01-01T00:00:00.000Z');
+        store.items[id].createdAt = new Date(Date.UTC(2000, 0, 1) + i * 1000).toISOString();
+      }
+    });
+  }
+
   function parse(text) {
     const s = JSON.parse(text);
     if (!s || typeof s.items !== 'object') throw new Error('Not a valid todo file');
     return { version: s.version || VERSION, items: s.items };
   }
 
-  const api = { VERSION, newId, emptyStore, addItem, updateItem, deleteItem, activeItems, merge, parse, seedRecurring, seedInterval, seedWatch, SOURCES, WHO, WATCH_DEFAULTS, INTERVAL_DEFAULTS, RECURRING_DEFAULTS, CATEGORIES, PRIORITIES };
+  const api = { VERSION, newId, emptyStore, addItem, updateItem, deleteItem, activeItems, merge, parse, seedRecurring, seedInterval, seedWatch, seedBacklog, BACKLOG_DEFAULTS, SOURCES, WHO, WATCH_DEFAULTS, INTERVAL_DEFAULTS, RECURRING_DEFAULTS, CATEGORIES, PRIORITIES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.TodoCore = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
