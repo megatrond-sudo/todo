@@ -207,13 +207,63 @@
     });
   }
 
+  const TOGLESING_DEFAULTS = [
+    "https://www.youtube.com/watch?v=N-B-kD28P2I",
+    "https://learn.microsoft.com/en-us/microsoft-365/admin/manage/agent-registry?view=o365-worldwide",
+    "https://www.google.com/search?q=microsoft+agent+framework+relation+to+entra&sca_esv=c952a6c0e2fbf0c6&sxsrf=ANbL-n45Qu9ASRAbLFgqF5D6cvYgaR7XpA%3A1771324032154&ei=gEKUaYSNCeipwPAPntya-AE&biw=1422&bih=739&ved=0ahUKEwiEzd-dqOCSAxXoFBAIHR6uBh8Q4dUDCBI&uact=5&oq=microsoft+agent+framework+relation+to+entra&gs_lp=Egxnd3Mtd2l6LXNlcnAiK21pY3Jvc29mdCBhZ2VudCBmcmFtZXdvcmsgcmVsYXRpb24gdG8gZW50cmEyBRAhGKABMgUQIRigATIEECEYFTIFECEYnwUyBRAhGJ8FMgUQIRifBTIFECEYnwUyBRAhGJ8FMgUQIRifBTIFECEYnwVI4BlQkwFYlRhwAXgBkAEAmAGBAqAB0RWqAQYyLjEyLjS4AQPIAQD4AQGYAhOgApEWwgIKEAAYsAMY1gQYR8ICDRAAGIAEGLADGEMYigXCAggQABiABBjLAcICBRAAGIAEwgIGEAAYFhgewgIIEAAYgAQYogTCAgUQABjvBcICBxAhGKABGAqYAwCIBgGQBgqSBwYyLjEzLjSgB8hpsgcGMS4xMy40uAeNFsIHBjMuMTQuMsgHJYAIAA&sclient=gws-wiz-serp",
+    "https://openid.net/wg/sharedsignals/",
+    "https://www.cyberark.com/resources/solution-briefs/cyberark-threat-detection-and-response-solution-brief",
+    "https://www.trevonix.com/blogs/continuous-adaptive-trust-is-the-new-mfa",
+    "https://docs.sailpoint.com/pdf/en/e-book/Modern%20Identity%20Security%20For%20Dummies,%20SailPoint%20Special%20Edition.pdf",
+    "https://learn.microsoft.com/en-us/microsoft-365/admin/manage/agent-registry?view=o365-worldwide&tabs=Microsoft-Entra-admin-center",
+    "https://www.google.com/search?q=caep+in+sailpoint+iiq&sca_esv=ffa6fe38ad5a2295&sxsrf=ANbL-n5_aHdmq9X-TyG6hknc2khtTEp7aQ%3A1770893843705&ei=E7KNaYrqKsOpwPAPwKyG-AU&biw=1422&bih=739&ved=0ahUKEwjKv_TT5dOSAxXDFBAIHUCWAV8Q4dUDCBI&uact=5&oq=caep+in+sailpoint+iiq&gs_lp=Egxnd3Mtd2l6LXNlcnAiFWNhZXAgaW4gc2FpbHBvaW50IGlpcTIFECEYoAEyBRAhGKABMgUQIRigAUisB1DxA1jQBnABeAGQAQCYAXagAbwCqgEDMS4yuAEDyAEA-AEBmAIEoALJAsICChAAGLADGNYEGEfCAgUQABjvBcICCBAAGIAEGKIEmAMAiAYBkAYEkgcDMS4zoAe9CLIHAzAuM7gHxgLCBwMwLjTIBweACAA&sclient=gws-wiz-serp",
+    "https://www.sailpoint.com/products/agent-identity-security",
+    "https://www.google.com/search?q=ephemeral+credentials+only+on+workload&oq=ephemeral+credentials+only+on+workload&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIJCAEQIRgKGKABMgkIAhAhGAoYoAEyBwgDECEYjwLSAQg3MTY0ajBqN6gCALACAA&sourceid=chrome&ie=UTF-8",
+    "https://www.kuppingercole.com/reprints/a850b361aa3fe375f02388c125ec8816",
+    "https://dev.to/willvelida/understanding-microsoft-entra-agent-id-4972?utm_source=substack&utm_medium=email",
+    "https://www.google.com/search?q=ai+agents+identity+management+provide+value&sca_esv=df3bf9aa0d357044&sxsrf=ANbL-n7WGlScKojaYo0yEehLwYMGJUNrgA%3A1773779258592&ei=Orm5aavvI72D1fIP1dbU0Q8&biw=1422&bih=739&ved=0ahUKEwir9PjU4qeTAxW9QVUIHVUrNfoQ4dUDCBA&uact=5&oq=ai+agents+identity+management+provide+value&gs_lp=Egxnd3Mtd2l6LXNlcnAiK2FpIGFnZW50cyBpZGVudGl0eSBtYW5hZ2VtZW50IHByb3ZpZGUgdmFsdWUyCBAAGIAEGKIEMggQABiABBiiBEjLIFDcCFj1GXABeAGQAQCYAZkBoAGrB6oBAzUuNLgBA8gBAPgBAZgCCKAChwbCAgoQABiwAxjWBBhHwgIHECMYsAIYJ8ICChAhGKABGMMEGAqYAwCIBgGQBgiSBwM0LjSgB4gqsgcDMy40uAeCBsIHBTMuNC4xyAcLgAgA&sclient=gws-wiz-serp",
+    "https://www.google.com/search?q=cnapp+microsoft+real+time+behavioural+monitoring&oq=cnapp+microsoft+real+time+behavioural+monitoring&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIJCAEQIRgKGKABMgkIAhAhGAoYoAHSAQkxMDUxNGowajeoAgCwAgA&sourceid=chrome&ie=UTF-8",
+    "https://www.google.com/search?q=CIEM+vs+cnapp+microsoft+defender+azure&sca_esv=231828c7d9589dfc&biw=1422&bih=739&sxsrf=ANbL-n6A4KJ-X0T5yALchHk_ydTO_RCGSA%3A1773738980318&ei=5Bu5aauOE5iTwPAPlu-HwQk&ved=0ahUKEwirkOLOzKaTAxWYCRAIHZb3IZgQ4dUDCBA&uact=5&oq=CIEM+vs+cnapp+microsoft+defender+azure&gs_lp=Egxnd3Mtd2l6LXNlcnAiJkNJRU0gdnMgY25hcHAgbWljcm9zb2Z0IGRlZmVuZGVyIGF6dXJlMgcQIRigARgKMgcQIRigARgKSJEmULIDWKYlcAF4AZABAJgBd6AB2RGqAQQyMS40uAEDyAEA-AEBmAIaoAKnEsICChAAGLADGNYEGEfCAgYQABgNGB7CAgYQABgWGB7CAgUQABjvBcICCBAAGIAEGKIEwgIEECEYFZgDAIgGAZAGBJIHBDIyLjSgB6FgsgcEMjEuNLgHpRLCBwUxMS4xNcgHHoAIAA&sclient=gws-wiz-serp",
+    "https://www.zscaler.com/blogs/product-insights/session-recording-ushered-access-zscaler-privileged-remote-access-pra",
+    "https://www.google.com/search?q=teleport+machine+accounts&oq=teleport+machine+accounts&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQABjvBTIKCAIQABiABBiiBDIHCAMQABjvBTIKCAQQABiABBiiBDIKCAUQABiABBiiBNIBCTE1MzE4ajBqN6gCALACAA&sourceid=chrome&ie=UTF-8",
+    "https://www.google.com/search?q=privileged+access+transitioning+to+more+than+just+pasm&oq=privileged+access+transitioning+to+more+than+just+pasm&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQIRigATIHCAIQIRigATIHCAMQIRigATIHCAQQIRigATIHCAUQIRigATIHCAYQIRiPAtIBCTE1NzE5ajBqN6gCALACAA&sourceid=chrome&ie=UTF-8",
+    "https://www.google.com/search?q=dynamisk+pam&oq=dynamisk+pam&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQABiABDIHCAIQABiABDIHCAMQABiABDIHCAQQABiABDIHCAUQABiABDIHCAYQABiABDIHCAcQABiABDIHCAgQABiABDIHCAkQABiABNIBCDE2MTNqMGo3qAIAsAIA&sourceid=chrome&ie=UTF-8",
+    "https://www.gartner.com/myhomepage?ref=header-nav",
+    "https://goteleport.com/use-cases/just-in-time-access-requests/",
+    "https://learn.microsoft.com/en-us/security/privileged-access-workstations/privileged-access-security-levels",
+    "https://www.gartner.com/document-reader/document/7500453?ref=askgartner-smart",
+    "https://www.youtube.com/watch?v=rBRwT0E0jQA",
+    "https://aws.amazon.com/bedrock/agents/",
+    "https://www.google.com/search?q=SPIFFI+ai+identity&oq=SPIFFI+ai+identity&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIJCAEQIRgKGKABMgkIAhAhGAoYoAHSAQkxMDUwOWowajeoAgCwAgA&sourceid=chrome&ie=UTF-8",
+    "https://www.google.com/search?q=identity+orchestraion+platform&oq=identity+orchestraion+platform&gs_lcrp=EgZjaHJvbWUyBggAEEUYOdIBCDQ1MTJqMGo3qAIAsAIA&sourceid=chrome&ie=UTF-8",
+    "https://www.blueprism.com/resources/blog/agentic-ai-vs-rpa-vs-ai-agents-comparing/",
+    "https://www.ibm.com/think/topics/single-pane-of-glass",
+    "https://www.google.com/search?q=sailpoint+iiq+mcp+server&oq=sailpoint+iiq+mcp+server&gs_lcrp=EgZjaHJvbWUqCQgAEAAYExiABDIJCAAQABgTGIAEMgoIARAAGIAEGKIEMgcIAhAAGO8FMgcIAxAAGO8FMgoIBBAAGIAEGKIEMgcIBRAAGO8F0gEINDU1MGowajeoAgCwAgA&sourceid=chrome&ie=UTF-8",
+    "https://mcpmarket.com/tools/skills/sailpoint-iiq-entitlement-review",
+    "https://www.sailpoint.com/identity-library/accelerate-identity-led-threat-response",
+    "https://curity.io/",
+    "https://www.google.com/search?q=opa+authorization&oq=opa+auth&gs_lcrp=EgZjaHJvbWUqBwgBEAAYgAQyBggAEEUYOTIHCAEQABiABDIICAIQABgWGB4yCAgDEAAYFhgeMggIBBAAGBYYHjIICAUQABgWGB4yCAgGEAAYFhgeMggIBxAAGBYYHjIICAgQABgWGB4yCAgJEAAYFhge0gEINjEwMGowajeoAgCwAgA&sourceid=chrome&ie=UTF-8",
+    "https://www.google.com/search?q=orchestration+platform+for+nhi+iga+pam+pbac+am+ciem&oq=orchestration+platform+for+nhi+iga+pam+pbac+am+ciem&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQIRigATIHCAIQIRigATIHCAMQIRiPAjIHCAQQIRiPAtIBCTExMDQyajBqN6gCALACAA&sourceid=chrome&ie=UTF-8",
+    "Google I/O '26 Keynote",
+  ];
+  // Reading links for WorkTODO. Same fixed-ID rule as the backlog: no copies, real edits win.
+  function seedToglesing(store) {
+    TOGLESING_DEFAULTS.forEach((t, i) => {
+      const id = 'toglesing-' + (i + 1);
+      if (!store.items[id]) {
+        addItem(store, t, { id, list: 'work' }, '1970-01-01T00:00:00.000Z');
+        store.items[id].createdAt = new Date(Date.UTC(2000, 0, 1) + i * 1000).toISOString();
+      }
+    });
+  }
+
   function parse(text) {
     const s = JSON.parse(text);
     if (!s || typeof s.items !== 'object') throw new Error('Not a valid todo file');
     return { version: s.version || VERSION, items: s.items };
   }
 
-  const api = { VERSION, newId, emptyStore, addItem, updateItem, deleteItem, activeItems, merge, parse, seedRecurring, seedInterval, seedWatch, seedBacklog, BACKLOG_DEFAULTS, SOURCES, WHO, WATCH_DEFAULTS, INTERVAL_DEFAULTS, RECURRING_DEFAULTS, CATEGORIES, PRIORITIES };
+  const api = { VERSION, newId, emptyStore, addItem, updateItem, deleteItem, activeItems, merge, parse, seedRecurring, seedInterval, seedWatch, seedBacklog, seedToglesing, TOGLESING_DEFAULTS, BACKLOG_DEFAULTS, SOURCES, WHO, WATCH_DEFAULTS, INTERVAL_DEFAULTS, RECURRING_DEFAULTS, CATEGORIES, PRIORITIES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.TodoCore = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

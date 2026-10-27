@@ -80,7 +80,7 @@
 <script>
 const C = TodoCore, KEY = 'todo-store';
 let store = localStorage[KEY] ? C.parse(localStorage[KEY]) : C.emptyStore();
-C.seedRecurring(store); C.seedInterval(store); C.seedWatch(store); C.seedBacklog(store);
+C.seedRecurring(store); C.seedInterval(store); C.seedWatch(store); C.seedBacklog(store); C.seedToglesing(store);
 let page = localStorage['todo-page'] || 'work';
 const $ = id => document.getElementById(id);
 const today = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
@@ -122,7 +122,7 @@ async function cloudSync() {
     const merged = C.merge(store, remote);
     const out = JSON.stringify(merged, null, 2);
     const changedRemote = JSON.stringify(C.merge(remote, remote)) !== JSON.stringify(merged);
-    store = merged; C.seedRecurring(store); C.seedInterval(store); C.seedWatch(store); C.seedBacklog(store); persist();
+    store = merged; C.seedRecurring(store); C.seedInterval(store); C.seedWatch(store); C.seedBacklog(store); C.seedToglesing(store); persist();
     if (changedRemote || !f) await gh('/gists/' + c.gistId, { method: 'PATCH', body: JSON.stringify({ files: { [FILE]: { content: JSON.stringify(store, null, 2) } } }) });
     say('Synced ' + new Date().toLocaleTimeString() + ' · cloud ' + c.gistId.slice(0, 6) + ' · ' + C.activeItems(store).length + ' items');
   } catch (e) { say('Cloud sync failed: ' + e.message + ' (changes are kept on this device)'); }
