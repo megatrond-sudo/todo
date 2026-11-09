@@ -56,6 +56,8 @@
   .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
   .cal .dow{font-size:.75rem;color:#666;text-align:center}
   .cell{background:#fafafa;border:1px solid #e3e3e3;border-radius:6px;min-height:4.4rem;padding:2px;overflow:hidden}
+  .cell.over{background:#dff0ff;outline:2px dashed var(--accent,#0b3d91)}
+  .chip[draggable=true]{cursor:grab} li.dragging{opacity:.4} li.dropat{box-shadow:0 -3px 0 var(--accent,#0b3d91)}
   .cell.today{outline:2px solid var(--accent,#0b3d91);background:#fff} .cell.other{opacity:.4}
   .cell .dn{font-size:.7rem;color:#555;font-weight:600} .cell .dm{display:none}
   .chip{font-size:.68rem;line-height:1.25;color:#fff;border-radius:4px;padding:1px 4px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
@@ -221,6 +223,7 @@ const FQ = ['recurring', 'interval'];
 const fOf = it => it.intervalDays || (pageOf(it) === 'recurring' ? 30 : null);   // pages with a frequency
 const MON = ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des'];
 const dm = d => d ? d.slice(8, 10) + '/' + MON[+d.slice(5, 7) - 1] : '–';
+const dl = d => d ? (+d.slice(8, 10)) + '. ' + MON[+d.slice(5, 7) - 1] : '–';   // 9. nov
 const dayNo = d => Math.round(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) / 864e5);
 
 // ---- Frequency pages (Tog and Recurring) ----
@@ -317,6 +320,17 @@ function moveItem(a, b) {
   save();
 }
 
+// Drag and drop: move item a to the place of item b. Only inside the same group (done / starred).
+function dropOn(a, b) {
+  if (!a || !b || a.id === b.id || !!a.done !== !!b.done || !!a.hot !== !!b.hot) return;
+  const fb = fallback(page);
+  const all = C.activeItems(store).filter(i => pageOf(i) === page).sort((x, y) => cmpv(x.order, y.order, 1) || fb(x, y));
+  const from = all.findIndex(i => i.id === a.id), to = all.findIndex(i => i.id === b.id);
+  all.splice(to, 0, all.splice(from, 1)[0]);   // moving down puts it after the target, moving up puts it before
+  all.forEach((i, n) => { if (i.order !== n + 1) C.updateItem(store, i.id, { order: n + 1 }); });
+  save();
+}
+
 function buildSortBar() {
   const st = sortState(page), def = SORTS[page][st.key];
   $('skey').innerHTML = ''; Object.entries(SORTS[page]).forEach(([k, d]) => opt($('skey'), k, d.label));
@@ -401,6 +415,14 @@ function render() {
     if (page === 'quick') li.append(mk('✓', it.done ? 'chk on' : 'chk', it.done ? 'Angre' : 'Ferdig', () => { C.updateItem(store, it.id, { done: !it.done }); save(); }));
     const m = mk('⋯', 'more', 'Actions', e => { e.stopPropagation(); showMenu(m, it); });
     li.append(m);
+    if (page === 'watch' && arrows) {
+      li.draggable = true;
+      li.ondragstart = e => { e.dataTransfer.setData('text/plain', it.id); e.dataTransfer.effectAllowed = 'move'; li.classList.add('dragging'); };
+      li.ondragend = () => li.classList.remove('dragging');
+      li.ondragover = e => { e.preventDefault(); li.classList.add('dropat'); };
+      li.ondragleave = () => li.classList.remove('dropat');
+      li.ondrop = e => { e.preventDefault(); li.classList.remove('dropat'); dropOn(store.items[e.dataTransfer.getData('text/plain')], it); };
+    }
     $('list').appendChild(li);
   }
 }
@@ -501,7 +523,7 @@ function openSprintDate(id, mode) {
   $('sdt').textContent = (mode === 'add' ? 'Dato i sprint: ' : 'Ny dato: ') + it.title;
   $('sdate').value = it.dueDate && (mode === 'date' || (it.dueDate >= r.start && it.dueDate <= r.end)) ? it.dueDate : '';
   $('sdate').min = mode === 'add' ? r.start : ''; $('sdate').max = mode === 'add' ? r.end : '';
-  $('sdn').textContent = 'Sprint ' + dm(r.start) + ' – ' + dm(r.end) + (mode === 'date' ? '. En dato etter sprinten tar punktet ut av sprinten.' : '. Tom dato = vises første dag i sprinten.');
+  $('sdn').textContent = 'Sprint ' + C.sprintNumber(S(), today()) + ': ' + dl(r.start) + ' - ' + dl(r.end) + (mode === 'date' ? '. En dato etter sprinten tar punktet ut av sprinten.' : '. Tom dato = vises første dag i sprinten.');
   $('sdout').hidden = mode === 'add';
   $('sdd').showModal();
 }
@@ -545,6 +567,10 @@ function chip(it, late) {
   const c = el('div', 'chip' + (it.done ? ' done' : ''), (late === 'none' ? '? ' : late === 'old' ? '! ' : '') + (it.hot ? '★ ' : '') + it.title);
   c.style.background = 'var(--c-' + p + ')'; c.title = KINDS[p] + ': ' + it.title + (late === 'none' ? ' (uten dato - klikk for å sette dato)' : late === 'old' ? ' (dato passert - klikk for å sette ny dato)' : '');
   c.onclick = e => { e.stopPropagation(); late ? openSprintDate(it.id, 'date') : openEdit(it.id); };
+  if (p !== 'recurring' && p !== 'interval') {   // Tog and Recurring dates come from "last done", so they cannot be dragged
+    c.draggable = true;
+    c.ondragstart = e => { e.dataTransfer.setData('text/plain', it.id); e.dataTransfer.effectAllowed = 'move'; };
+  }
   return c;
 }
 function kveldChip(date) {
@@ -558,7 +584,19 @@ function kveldChip(date) {
 function cell(date, chips, other) {
   const c = el('div', 'cell' + (date === today() ? ' today' : '') + (other ? ' other' : '') + (chips.length ? '' : ' empty'));
   const dn = el('div', 'dn'); dn.append(el('span', 'dd', String(+date.slice(8)) + (date.slice(8) === '01' ? ' ' + MON[+date.slice(5, 7) - 1] : '')), el('span', 'dm', DAYS_FULL[C.weekday(date) - 1] + ' ' + dm(date)));
-  c.append(dn, ...chips); return c;
+  c.append(dn, ...chips);
+  c.ondragover = e => { e.preventDefault(); c.classList.add('over'); };
+  c.ondragleave = () => c.classList.remove('over');
+  c.ondrop = e => {
+    e.preventDefault(); c.classList.remove('over');
+    const it = store.items[e.dataTransfer.getData('text/plain')];
+    if (!it || it.dueDate === date) return;
+    const patch = C.datePatch(it, date, S(), today());
+    C.updateItem(store, it.id, patch);
+    say(it.title.slice(0, 40) + ' flyttet til ' + dl(date) + (it.sprint && patch.sprint === false ? ' (tatt ut av sprinten)' : ''));
+    save();
+  };
+  return c;
 }
 function dowHeader(grid) { C.DAY_NAMES.forEach(n => grid.append(el('div', 'dow', n))); }
 
@@ -584,12 +622,12 @@ function buildStars() {
 
 function buildSprint() {
   const D = dash(), r = C.sprintRange(S(), today()), box = el('div');
-  const bar = el('div', 'bar'); bar.append(el('b', null, 'Sprint ' + dm(r.start) + ' – ' + dm(r.end)),
+  const bar = el('div', 'bar'); bar.append(el('b', null, 'Sprint ' + C.sprintNumber(S(), today()) + ' · ' + dl(r.start) + ' - ' + dl(r.end)),
     selectOf([['both', 'Work + privat'], ['work', 'Bare work'], ['priv', 'Bare privat']], D.sf, v => setDash({ sf: v })));
   const lab = el('label'); const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = D.kv; cb.onchange = () => setDash({ kv: cb.checked }); lab.append(cb, ' Kveldsrutine'); bar.append(lab);
   box.append(bar, legend(D.sf === 'both' ? ['work', 'priv'] : [D.sf], D.kv && D.sf !== 'work'));
   const byDate = {}, put = (d, c) => (byDate[d] = byDate[d] || []).push(c);
-  C.activeItems(store).filter(i => i.sprint && ['work', 'priv'].includes(pageOf(i)) && (D.sf === 'both' || pageOf(i) === D.sf)).sort(byCreated).forEach(it => {
+  C.activeItems(store).filter(i => i.sprint && !i.done && ['work', 'priv'].includes(pageOf(i)) && (D.sf === 'both' || pageOf(i) === D.sf)).sort(byCreated).forEach(it => {
     if (!it.dueDate) put(r.start, chip(it, 'none'));
     else if (it.dueDate < r.start) put(r.start, chip(it, 'old'));
     else if (it.dueDate <= r.end) put(it.dueDate, chip(it));
@@ -633,7 +671,7 @@ function buildMonth() {
 
 function renderDash() {
   const box = $('pagebox');
-  box.append(section('star', '★ Viktig (stjernemarkert)', buildStars), section('sprint', 'Sprint', buildSprint), section('month', 'Måned', buildMonth));
+  box.append(section('star', '★ Viktig (stjernemarkert)', buildStars), section('sprint', 'Sprint ' + C.sprintNumber(S(), today()), buildSprint), section('month', 'Måned', buildMonth));
 }
 
 // Evening routine popup: show the activities of a date and mark the whole routine as done.
@@ -686,7 +724,7 @@ function renderSettings() {
   const l2 = el('label', null, 'Sprintlengde (dager)'), d2 = document.createElement('input'); d2.type = 'number'; d2.min = 7; d2.max = 28; d2.value = s.sprintDays; d2.style.width = '4rem';
   d2.onchange = () => { const c = cfg(); c.sprintDays = Math.min(28, Math.max(7, Math.round(+d2.value) || 14)); commit(c); };
   l2.append(d2); g.append(l1, l2); box.append(g);
-  const r = C.sprintRange(s, today()); box.append(el('small', null, 'Gjeldende sprint: ' + dm(r.start) + ' – ' + dm(r.end)));
+  const r = C.sprintRange(s, today()); box.append(el('small', null, 'Gjeldende sprint: Sprint ' + C.sprintNumber(s, today()) + ', ' + dl(r.start) + ' - ' + dl(r.end)));
   box.append(el('div', 'gh', 'Farger'));
   const cg = el('div', 'sgrid');
   Object.entries(COLOR_LABELS).forEach(([k, t]) => {

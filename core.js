@@ -287,6 +287,11 @@
     const start = s + (t < s ? 0 : Math.floor((t - s) / len)) * len;
     return { start: isoDay(start), end: isoDay(start + len - 1) };
   }
+  // Sprint number: the first sprint is 1.
+  function sprintNumber(settings, today) {
+    const len = Math.max(1, +settings.sprintDays || 14), s = dayNum(settings.sprintStart), t = dayNum(today);
+    return t < s ? 1 : Math.floor((t - s) / len) + 1;
+  }
   // Set the date of an item. A sprint item with a date after the sprint leaves the sprint.
   function datePatch(item, date, settings, today) {
     const patch = { dueDate: date || null };
@@ -324,7 +329,7 @@
     return { version: s.version || VERSION, items: s.items };
   }
 
-  const api = { VERSION, newId, emptyStore, addItem, updateItem, deleteItem, activeItems, merge, parse, seedRecurring, seedInterval, seedWatch, seedBacklog, seedToglesing, TOGLESING_DEFAULTS, dayNum, isoDay, weekday, DEFAULT_SETTINGS, getSettings, saveSettings, sprintRange, datePatch, DAY_NAMES, kveldActs, kveldFor, kveldLog, kveldStatus, setKveldDone, kveldTrackStart, BACKLOG_DEFAULTS, SOURCES, WHO, WATCH_DEFAULTS, INTERVAL_DEFAULTS, RECURRING_DEFAULTS, CATEGORIES, PRIORITIES };
+  const api = { VERSION, newId, emptyStore, addItem, updateItem, deleteItem, activeItems, merge, parse, seedRecurring, seedInterval, seedWatch, seedBacklog, seedToglesing, TOGLESING_DEFAULTS, dayNum, isoDay, weekday, DEFAULT_SETTINGS, getSettings, saveSettings, sprintRange, sprintNumber, datePatch, DAY_NAMES, kveldActs, kveldFor, kveldLog, kveldStatus, setKveldDone, kveldTrackStart, BACKLOG_DEFAULTS, SOURCES, WHO, WATCH_DEFAULTS, INTERVAL_DEFAULTS, RECURRING_DEFAULTS, CATEGORIES, PRIORITIES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.TodoCore = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
