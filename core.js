@@ -104,7 +104,7 @@
   }
 
   // Watchlist. Source is the main service. alsoOn holds other services. who: kids | me | both.
-  const SOURCES = ['Netflix', 'Viaplay', 'Disney', 'NRK', 'TV2'];
+  const SOURCES = ['Netflix', 'Viaplay', 'Disney', 'NRK', 'TV2', 'Apple+', 'SkyShowtime', 'HBO', 'Prime', 'Annet'];
   const WHO = { kids: 'Barn', me: 'Meg', both: 'Sammen' };
   const WATCH_DEFAULTS = [
     ['Sauen Shaun: Filmen', ['Netflix']],
@@ -257,13 +257,74 @@
     });
   }
 
+  // ---- Dates (day numbers count days since 1970-01-01, in UTC) ----
+  const dayNum = d => Math.round(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) / 864e5);
+  const isoDay = n => new Date(n * 864e5).toISOString().slice(0, 10);
+  const weekday = d => (new Date(d + 'T00:00:00Z').getUTCDay() + 6) % 7 + 1;   // 1 = Monday ... 7 = Sunday
+
+  // ---- Settings: one synced item. Edit values on the Settings page. ----
+  const SETTINGS_ID = 'settings';
+  const DEFAULT_SETTINGS = {
+    sprintStart: '2026-11-09',   // a Monday. All sprints are counted from this date.
+    sprintDays: 14,
+    colors: {
+      accent: '#0b3d91', hot: '#b71c1c',
+      work: '#1e88e5', priv: '#8e24aa', recurring: '#00897b', interval: '#ef6c00', quick: '#6d4c41',
+      kveldDone: '#2e7d32', kveldMiss: '#c62828', kveldOpen: '#607d8b', kveldToday: '#f9a825',
+    },
+  };
+  function getSettings(store) {
+    const it = store.items[SETTINGS_ID], c = (it && !it.deleted && it.cfg) || {};
+    return { ...DEFAULT_SETTINGS, ...c, colors: { ...DEFAULT_SETTINGS.colors, ...(c.colors || {}) } };
+  }
+  function saveSettings(store, cfg, now = new Date().toISOString()) {
+    if (store.items[SETTINGS_ID]) updateItem(store, SETTINGS_ID, { cfg, deleted: false }, now);
+    else addItem(store, 'Settings', { id: SETTINGS_ID, list: 'settings', cfg }, now);
+  }
+  // The sprint that holds "today". Before the first sprint starts, the first sprint is used.
+  function sprintRange(settings, today) {
+    const s = dayNum(settings.sprintStart), len = Math.max(1, +settings.sprintDays || 14), t = dayNum(today);
+    const start = s + (t < s ? 0 : Math.floor((t - s) / len)) * len;
+    return { start: isoDay(start), end: isoDay(start + len - 1) };
+  }
+  // Set the date of an item. A sprint item with a date after the sprint leaves the sprint.
+  function datePatch(item, date, settings, today) {
+    const patch = { dueDate: date || null };
+    if (item.sprint && date && date > sprintRange(settings, today).end) patch.sprint = false;
+    return patch;
+  }
+
+  // ---- Kveld (evening routine) ----
+  // Activity: list "kveld", days = [1..7] (1 = Monday). Done log: id "kveldlog-DATE", list "kveldlog". Kept for ever (about 365 small items per year).
+  const DAY_NAMES = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
+  const kveldActs = store => activeItems(store).filter(i => i.list === 'kveld').sort((a, b) => (a.order || 0) - (b.order || 0) || (a.createdAt < b.createdAt ? -1 : 1));
+  const kveldFor = (store, dow) => kveldActs(store).filter(a => (a.days || []).includes(dow));
+  const kveldLog = (store, date) => { const l = store.items['kveldlog-' + date]; return l && !l.deleted ? l : null; };
+  const kveldTrackStart = store => { const a = kveldActs(store).map(i => i.createdAt.slice(0, 10)).sort(); return a[0] || null; };
+  // state: none | done | miss | today | open
+  function kveldStatus(store, date, today) {
+    const log = kveldLog(store, date);
+    const acts = log ? log.acts.map(a => ({ id: a.id, title: a.title })) : kveldFor(store, weekday(date));
+    if (log) return { state: 'done', acts };
+    if (!acts.length) return { state: 'none', acts };
+    const ts = kveldTrackStart(store);
+    if (date === today) return { state: 'today', acts };
+    if (date > today || !ts || date < ts) return { state: 'open', acts };
+    return { state: 'miss', acts };
+  }
+  function setKveldDone(store, date, on, now = new Date().toISOString()) {
+    const id = 'kveldlog-' + date, acts = kveldFor(store, weekday(date)).map(a => ({ id: a.id, title: a.title }));
+    if (store.items[id]) updateItem(store, id, { deleted: !on, acts: on ? acts : store.items[id].acts }, now);
+    else if (on) addItem(store, 'Kveldsrutine ' + date, { id, list: 'kveldlog', date, done: true, acts }, now);
+  }
+
   function parse(text) {
     const s = JSON.parse(text);
     if (!s || typeof s.items !== 'object') throw new Error('Not a valid todo file');
     return { version: s.version || VERSION, items: s.items };
   }
 
-  const api = { VERSION, newId, emptyStore, addItem, updateItem, deleteItem, activeItems, merge, parse, seedRecurring, seedInterval, seedWatch, seedBacklog, seedToglesing, TOGLESING_DEFAULTS, BACKLOG_DEFAULTS, SOURCES, WHO, WATCH_DEFAULTS, INTERVAL_DEFAULTS, RECURRING_DEFAULTS, CATEGORIES, PRIORITIES };
+  const api = { VERSION, newId, emptyStore, addItem, updateItem, deleteItem, activeItems, merge, parse, seedRecurring, seedInterval, seedWatch, seedBacklog, seedToglesing, TOGLESING_DEFAULTS, dayNum, isoDay, weekday, DEFAULT_SETTINGS, getSettings, saveSettings, sprintRange, datePatch, DAY_NAMES, kveldActs, kveldFor, kveldLog, kveldStatus, setKveldDone, kveldTrackStart, BACKLOG_DEFAULTS, SOURCES, WHO, WATCH_DEFAULTS, INTERVAL_DEFAULTS, RECURRING_DEFAULTS, CATEGORIES, PRIORITIES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.TodoCore = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

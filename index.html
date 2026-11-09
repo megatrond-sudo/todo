@@ -20,19 +20,61 @@
   li.w-kids{border-left:6px solid #1e88e5;background:#e3f2fd} li.w-me{border-left:6px solid #8e24aa;background:#f3e5f5} li.w-both{border-left:6px solid #fbc02d;background:#fff9c4}
   li.w-kids.done{background:linear-gradient(90deg,#c8e6c9 50%,#e3f2fd 50%)} li.w-me.done{background:linear-gradient(90deg,#c8e6c9 50%,#f3e5f5 50%)} li.w-both.done{background:linear-gradient(90deg,#c8e6c9 50%,#fff9c4 50%)}
   li.wl{padding:.1rem .3rem} li.wl .clamp{-webkit-line-clamp:1} li.wl button{padding:.1rem .4rem}
-  li.hot,li.hot.sprint,li.hot[class*=w-]{border-left:6px solid #b71c1c;background:#ffcdd2!important}
+  li.hot,li.hot.sprint,li.hot[class*=w-]{border-left:6px solid var(--hot,#b71c1c);background:#ffcdd2!important}
   h1{margin:.3rem 0 .1rem} #status{margin:0 0 .3rem;min-height:1.1em}
   .mv{padding:.2rem .4rem;font-size:.8rem}
   li.sprint{background:#fff8dc}
-  nav button{font-weight:bold} nav .on{background:#cde}
+  nav.bar{gap:.25rem;background:#eef0f4;padding:.25rem;border-radius:999px;width:fit-content;max-width:100%;overflow-x:auto;scrollbar-width:none}
+  nav button{font-weight:600;font-size:.85rem;border:0;background:transparent;color:#4a5568;padding:.4rem .85rem;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s,box-shadow .15s}
+  nav button:hover{background:#dde2ea;color:#1a202c}
+  nav .on,nav .on:hover{background:#fff;color:var(--accent,#0b3d91);box-shadow:0 1px 4px #0003}
+  .dcol{width:3rem;flex:none;font-variant-numeric:tabular-nums;font-weight:600;color:#444;font-size:.9rem}
+  .plus{padding:.2rem .55rem;font-weight:bold}
+  @media (max-width:600px){
+    body{padding:0 .4rem;margin:.5rem auto;font-size:14px}
+    li{gap:.25rem;padding:.3rem .15rem}
+    li small{font-size:.75rem}
+    li button{padding:.2rem .35rem;font-size:.85rem}
+    .more{padding:.2rem .4rem;font-size:1.1rem}
+    .mv{padding:.1rem .25rem;font-size:.7rem}
+    .dcol{width:2.3rem;font-size:.78rem}
+    nav button{padding:.35rem .6rem;font-size:.8rem}
+  }
   .done .t{text-decoration:line-through;color:#888}
   [hidden]{display:none!important}
   ul{list-style:none;padding:0} #status{color:#555;font-size:.9rem}
   .bar{display:flex;gap:.4rem;flex-wrap:wrap;margin:.5rem 0;align-items:center}
   details{margin-top:1.5rem;color:#555}
+  body.wide{max-width:1000px}
+  #fbtn{display:inline-flex;align-items:center;padding:.4rem .5rem} #fbtn svg{width:1.1rem;height:1.1rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  #fbtn.act{background:var(--accent,#0b3d91);color:#fff;border-color:var(--accent,#0b3d91)}
+  #adays,#edays{display:flex;gap:.3rem;flex-wrap:wrap;align-items:center} #adays label,#edays label{font-size:.85rem}
+  #fdlg .bar,#sdform,#kdlg{margin:.5rem 0} #sdform{display:flex;flex-direction:column;gap:.5rem}
+  .chk{padding:.2rem .5rem;font-weight:bold} .chk.on{background:#c8e6c9}
+  .dsec{margin-top:.8rem;color:inherit} .dsec>summary{font-weight:600;cursor:pointer;padding:.3rem 0}
+  .gh{font-weight:600;margin:.5rem 0 .1rem;color:#444}
+  .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+  .cal .dow{font-size:.75rem;color:#666;text-align:center}
+  .cell{background:#fafafa;border:1px solid #e3e3e3;border-radius:6px;min-height:4.4rem;padding:2px;overflow:hidden}
+  .cell.today{outline:2px solid var(--accent,#0b3d91);background:#fff} .cell.other{opacity:.4}
+  .cell .dn{font-size:.7rem;color:#555;font-weight:600} .cell .dm{display:none}
+  .chip{font-size:.68rem;line-height:1.25;color:#fff;border-radius:4px;padding:1px 4px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+  .chip.done{opacity:.45;text-decoration:line-through} .chip.kt{color:#000}
+  .legend{display:flex;flex-wrap:wrap;gap:.2rem .7rem;font-size:.75rem;margin:.3rem 0}
+  .legend i{display:inline-block;width:.7rem;height:.7rem;border-radius:3px;margin-right:.25rem;vertical-align:middle}
+  .sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:.5rem .8rem;margin:.5rem 0}
+  .sgrid label{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+  .sgrid input[type=color]{width:3rem;height:1.8rem;padding:0;border:1px solid #bbb;border-radius:4px;background:none}
+  @media (max-width:600px){
+    .cal{grid-template-columns:1fr} .cal .dow{display:none}
+    .cell{min-height:0;padding:3px 5px} .cell .dd{display:none} .cell .dm{display:inline;font-size:.8rem}
+    .cell.empty:not(.today),.cell.other{display:none}
+    .chip{font-size:.78rem;white-space:normal}
+  }
 </style></head>
 <body>
 <nav class="bar">
+  <button data-page="dash">Dashboard</button>
   <button data-page="work">WorkTODO</button>
   <button data-page="priv">PrivTODO</button>
   <button data-page="backlog">Backlog</button>
@@ -40,24 +82,27 @@
   <button data-page="recurring">Tog</button>
   <button data-page="interval">Recurring</button>
   <button data-page="watch">Watchlist</button>
+  <button data-page="mat">Mat</button>
+  <button data-page="kveld">Kveld</button>
+  <button data-page="settings" title="Settings">⚙</button>
 </nav>
 <h1 id="h"></h1>
 <div id="status"></div>
-<div id="sortbar" class="bar">Sorter: <select id="skey"></select> <select id="sdir"></select></div>
 <form id="add">
   <input type="text" id="title" placeholder="New task" required>
   <select id="cat"></select>
   <select id="pri"></select>
-  <input type="date" id="due" title="Frist">
+  <input type="date" id="due" title="Dato">
+  <label id="aspl"><input type="checkbox" id="asp"> Sprint</label>
+  <span id="adays"></span>
   <input type="number" id="freq" min="1" step="1" placeholder="Hver N dager" title="Frekvens (dager)" style="width:8rem">
   <input type="date" id="lastd" title="Sist gjort">
   <select id="wsrc"></select><select id="wwho"></select>
   <button>Add</button>
+  <button type="button" id="fbtn" title="Sortering og filter" aria-label="Sortering og filter"><svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg></button>
 </form>
-<div id="filterbar" class="bar">Filter: <select id="fcat"></select> <label><input type="checkbox" id="fsprint"> Sprint only</label></div>
-<div id="wfilter" class="bar">Filter: <select id="fsrc"></select> <select id="fwho"></select> <label><input type="checkbox" id="fshow"> Show watched</label></div>
-<div id="qfilter" class="bar"><label><input type="checkbox" id="fqdone"> Vis ferdige</label></div>
 <ul id="list"></ul>
+<div id="pagebox"></div>
 <details id="settings"><summary>Innstillinger (ny enhet, sikkerhetskopi)</summary>
   <div class="bar">
     <button id="cloud">Cloud setup</button>
@@ -67,11 +112,23 @@
     <input type="file" id="file" accept=".json" hidden>
   </div>
 </details>
+<dialog id="fdlg"><b>Sortering og filter</b>
+  <div id="sortbar" class="bar">Sorter: <select id="skey"></select> <select id="sdir"></select></div>
+  <div id="filterbar" class="bar">Filter: <select id="fcat"></select> <label><input type="checkbox" id="fsprint"> Sprint only</label></div>
+  <div id="wfilter" class="bar">Filter: <select id="fsrc"></select> <select id="fwho"></select> <label><input type="checkbox" id="fshow"> Show watched</label></div>
+  <div id="qfilter" class="bar"><label><input type="checkbox" id="fqdone"> Vis ferdige</label></div>
+  <div class="bar"><button id="fclose">Lukk</button></div></dialog>
+<dialog id="sdd"><form id="sdform"><b id="sdt"></b><input type="date" id="sdate"><small id="sdn"></small>
+  <div class="bar"><button>Lagre</button><button type="button" id="sdout">Ut av sprint</button><button type="button" id="sdcancel">Avbryt</button></div></form></dialog>
+<dialog id="kdlg"><b id="kdt"></b><ul id="kdl"></ul><small id="kdn"></small>
+  <div class="bar"><button id="kdok"></button><button id="kdclose">Lukk</button></div></dialog>
 <dialog id="detail"><div id="dtext"></div><small id="dmeta"></small>
   <div class="bar"><button id="dedit">Edit</button><button id="dclose">Close</button></div></dialog>
 <dialog id="editd"><form id="eform">
   <textarea id="etitle" required></textarea>
-  <select id="ecat"></select><select id="esrc"></select><select id="ewho"></select><select id="epri"></select><input type="date" id="edue" title="Frist">
+  <select id="ecat"></select><select id="esrc"></select><select id="ewho"></select><select id="epri"></select><input type="date" id="edue" title="Dato">
+  <label id="espl"><input type="checkbox" id="esp"> I sprint</label>
+  <div id="edays"></div>
   <label id="efl">Hver <input type="number" id="efreq" min="1" step="1" style="width:5rem"> dager</label>
   <label id="ell">Sist gjort <input type="date" id="elast"></label>
   <div class="bar"><button>Save</button><button type="button" id="ecancel">Cancel</button></div>
@@ -158,7 +215,7 @@ $('code').onclick = async () => {
   catch { prompt('Copy this setup link:', code); }
 };
 
-function pageTitle() { return { work: 'WorkTODO', priv: 'PrivTODO', backlog: 'Backlog', quick: 'Quick', recurring: 'Tog', interval: 'Recurring', watch: 'Watchlist' }[page]; }
+function pageTitle() { return { work: 'WorkTODO', priv: 'PrivTODO', backlog: 'Backlog', quick: 'Quick', recurring: 'Tog', interval: 'Recurring', watch: 'Watchlist', mat: 'Mat', dash: 'Dashboard', kveld: 'Kveld', settings: 'Settings' }[page]; }
 const FQ = ['recurring', 'interval'];
 // Tog items without a saved frequency count as 30 days.
 const fOf = it => it.intervalDays || (pageOf(it) === 'recurring' ? 30 : null);   // pages with a frequency
@@ -205,26 +262,28 @@ function ivText(it) {
 
 function metaText(it) {
   const p = pageOf(it);
-  if (it.hot && !it.done && p !== 'priv' && p !== 'watch') return '★ ' + dm(it.dueDate);
+  if (it.hot && !it.done && p !== 'priv' && p !== 'watch' && p !== 'work') return '★ ' + dm(it.dueDate);
+  if (p === 'work') return it.sprint ? 'Sprint' : '';
   if (p === 'watch') return [it.source, it.alsoOn && it.alsoOn.length && 'Også: ' + it.alsoOn.join(', '), C.WHO[it.who]].filter(Boolean).join(' · ');
   if (FQ.includes(p)) return ivText(it);
-  if (p === 'priv') return [it.category, it.priority && 'Prio: ' + C.PRIORITIES[it.priority], it.dueDate && 'Frist: ' + dm(it.dueDate), it.sprint && 'Sprint'].filter(Boolean).join(' · ');
+  if (p === 'priv') return [it.category, it.priority && 'Prio: ' + C.PRIORITIES[it.priority], it.sprint && 'Sprint'].filter(Boolean).join(' · ');
   return '';
 }
 
 // ---- Sorting ----
 const text = f => ({ type: 'text', get: i => { const v = f(i); return v ? String(v).toLowerCase() : null; } });
 const SORTS = {
-  work: { manual: { label: 'Manuell rekkefølge', manual: true }, name: { label: 'Navn', ...text(i => i.title) }, created: { label: 'Opprettet', type: 'date', get: i => i.createdAt } },
-  priv: { manual: { label: 'Manuell rekkefølge', manual: true }, name: { label: 'Navn', ...text(i => i.title) }, due: { label: 'Frist', type: 'date', get: i => i.dueDate }, pri: { label: 'Prioritet', type: 'pri', get: i => i.priority }, cat: { label: 'Kategori', ...text(i => i.category) }, created: { label: 'Opprettet', type: 'date', get: i => i.createdAt } },
+  work: { manual: { label: 'Manuell rekkefølge', manual: true }, name: { label: 'Navn', ...text(i => i.title) }, due: { label: 'Dato', type: 'date', get: i => i.dueDate }, created: { label: 'Opprettet', type: 'date', get: i => i.createdAt } },
+  priv: { manual: { label: 'Manuell rekkefølge', manual: true }, name: { label: 'Navn', ...text(i => i.title) }, due: { label: 'Dato', type: 'date', get: i => i.dueDate }, pri: { label: 'Prioritet', type: 'pri', get: i => i.priority }, cat: { label: 'Kategori', ...text(i => i.category) }, created: { label: 'Opprettet', type: 'date', get: i => i.createdAt } },
   backlog: { created: { label: 'Opprettet', type: 'date', get: i => i.createdAt }, name: { label: 'Navn', ...text(i => i.title) } },
   quick: { created: { label: 'Opprettet', type: 'date', get: i => i.createdAt }, name: { label: 'Navn', ...text(i => i.title) } },
+  mat: { name: { label: 'Navn', ...text(i => i.title) }, created: { label: 'Opprettet', type: 'date', get: i => i.createdAt } },
   recurring: { red: { label: 'Mest røde', type: 'red', get: togScore }, name: { label: 'Navn', ...text(i => i.title) }, last: { label: 'Sist gjort', type: 'date', get: i => i.lastPerformed }, next: { label: 'Neste', type: 'date', get: nextDue }, freq: { label: 'Frekvens', type: 'num', get: fOf } },
   interval: { next: { label: 'Neste', type: 'date', get: nextDue }, name: { label: 'Navn', ...text(i => i.title) }, last: { label: 'Sist gjort', type: 'date', get: i => i.lastPerformed }, freq: { label: 'Frekvens', type: 'num', get: fOf } },
   watch: { manual: { label: 'Manuell rekkefølge', manual: true }, name: { label: 'Navn', ...text(i => i.title) }, src: { label: 'Kilde', ...text(i => i.source) }, who: { label: 'For hvem', type: 'num', get: i => ({ kids: 1, me: 2, both: 3 })[i.who] }, created: { label: 'Opprettet', type: 'date', get: i => i.createdAt } },
 };
 const DIRS = { text: ['A–Å', 'Å–A'], date: ['Eldst først', 'Nyest først'], num: ['Lavest først', 'Høyest først'], pri: ['Høy først', 'Lav først'], red: ['Minst røde først', 'Mest røde først'] };
-const DEFAULT_SORT = { work: { key: 'manual', dir: 'asc' }, priv: { key: 'manual', dir: 'asc' }, watch: { key: 'manual', dir: 'asc' }, backlog: { key: 'created', dir: 'asc' }, quick: { key: 'created', dir: 'asc' }, recurring: { key: 'red', dir: 'desc' }, interval: { key: 'next', dir: 'asc' } };
+const DEFAULT_SORT = { work: { key: 'manual', dir: 'asc' }, priv: { key: 'manual', dir: 'asc' }, watch: { key: 'manual', dir: 'asc' }, backlog: { key: 'created', dir: 'asc' }, quick: { key: 'created', dir: 'asc' }, mat: { key: 'name', dir: 'asc' }, recurring: { key: 'red', dir: 'desc' }, interval: { key: 'next', dir: 'asc' } };
 const SK = 'todo-sort';
 const sortAll = () => { try { return JSON.parse(localStorage[SK] || '{}'); } catch { return {}; } };
 const NOSORT = ['quick', 'recurring', 'interval'];
@@ -238,7 +297,7 @@ function cmpv(x, y, dir) {
 }
 const byCreated = (a, b) => a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0;
 // The order used for items without a manual position, and for ties.
-const fallback = p => p === 'priv'
+const fallback = p => (p === 'priv' || p === 'work')
   ? (a, b) => (!!b.sprint - !!a.sprint) || ((a.priority || 9) - (b.priority || 9)) || cmpv(a.dueDate, b.dueDate, 1) || byCreated(a, b)
   : byCreated;
 function sortItems(items, p) {
@@ -271,26 +330,39 @@ $('sdir').onchange = () => setSort(page, { key: $('skey').value, dir: $('sdir').
 // ---- Render ----
 const mk = (label, cls, title, fn) => { const b = document.createElement('button'); b.textContent = label; if (cls) b.className = cls; if (title) b.title = title; b.onclick = fn; return b; };
 
+const SPECIAL = ['dash', 'kveld', 'settings'];
 function render() {
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.page === page));
   $('h').textContent = pageTitle();
+  applySettings();
+  document.body.classList.toggle('wide', page === 'dash');
+  const special = SPECIAL.includes(page), wp = page === 'work' || page === 'priv';
   const fq = FQ.includes(page);
+  $('pagebox').innerHTML = '';
+  $('settings').hidden = page !== 'settings';
+  $('add').hidden = page === 'dash' || page === 'settings';
   $('wsrc').hidden = $('wwho').hidden = $('wfilter').hidden = page !== 'watch';
   $('freq').hidden = !fq; $('lastd').hidden = true;
   $('freq').required = fq;
-  $('cat').hidden = $('pri').hidden = $('due').hidden = page !== 'priv';
-  $('filterbar').hidden = page !== 'priv';
+  $('cat').hidden = $('pri').hidden = page !== 'priv';
+  $('due').hidden = $('aspl').hidden = !wp;
+  $('adays').hidden = page !== 'kveld';
+  $('filterbar').hidden = !wp; $('fcat').hidden = page !== 'priv';
   $('qfilter').hidden = page !== 'quick';
-  if (page === 'recurring') $('list').after($('add')); else $('sortbar').after($('add'));  // Tog: add form at the bottom
-  $('sortbar').hidden = NOSORT.includes(page);
-  buildSortBar();
+  $('title').placeholder = page === 'mat' ? 'New dish' : page === 'kveld' ? 'New activity' : 'New task';
+  if (page === 'recurring') $('list').after($('add')); else $('status').after($('add'));  // Tog: add form at the bottom
+  $('sortbar').hidden = special || NOSORT.includes(page);
+  $('fbtn').hidden = special || ($('sortbar').hidden && $('filterbar').hidden && $('wfilter').hidden && $('qfilter').hidden);
+  if (!special) buildSortBar();
+  if (special) { $('list').innerHTML = ''; ({ dash: renderDash, kveld: renderKveld, settings: renderSettings })[page](); return; }
   const fc = $('fcat').value, fs = $('fsprint').checked;
   const items = C.activeItems(store)
     .filter(i => pageOf(i) === page)
     .filter(i => page !== 'watch' || ((!$('fsrc').value || i.source === $('fsrc').value) && (!$('fwho').value || i.who === $('fwho').value) && ($('fshow').checked || !i.done)))
     .filter(i => page !== 'quick' || $('fqdone').checked || !i.done)
-    .filter(i => page !== 'priv' || ((!fc || i.category === fc) && (!fs || i.sprint)));
+    .filter(i => (page !== 'priv' && page !== 'work') || ((page === 'work' || !fc || i.category === fc) && (!fs || i.sprint)));
   sortItems(items, page);
+  $('fbtn').classList.toggle('act', !!((wp && fs) || (page === 'priv' && fc) || (page === 'watch' && ($('fsrc').value || $('fwho').value || $('fshow').checked)) || (page === 'quick' && $('fqdone').checked)));
   const arrows = ['work', 'priv', 'watch'].includes(page) && isManual(page);
   $('list').innerHTML = '';
   for (const [idx, it] of items.entries()) {
@@ -300,16 +372,19 @@ function render() {
       : (it.done ? 'done ' : '') + (it.sprint && !it.done ? 'sprint' : '');
     if (it.hot && !it.done) li.className += ' hot';
     if (page === 'watch') li.className += ' wl';
+    if (page === 'mat') li.className += ' wl';
     const main = document.createElement('div'); main.className = 'main';
     const t = document.createElement('div'); t.className = 't clamp'; t.textContent = it.title; t.onclick = () => openDetail(it.id);
     const sm = document.createElement('small'); sm.textContent = metaText(it);
-    main.append(t); if (page !== 'watch') main.append(sm); li.append(main);
+    main.append(t); if (page !== 'watch' && page !== 'mat') main.append(sm);
+    if (page === 'priv' || page === 'work') { const d = document.createElement('div'); d.className = 'dcol'; d.textContent = it.dueDate ? dm(it.dueDate) : ''; d.title = 'Dato'; li.append(d); }
+    li.append(main);
     if (['work', 'priv', 'quick', 'watch'].includes(page) && !it.done)
       li.append(mk('★', '', it.hot ? 'Fjern uthevning' : 'Utheve (rød, i dag, øverst)', () => {
         C.updateItem(store, it.id, it.hot ? { hot: false } : { hot: true, dueDate: today() }); save();
       }));
     if (page === 'priv' && !it.done)
-      li.append(mk('+7d', '', 'Utsett 7 dager', () => {
+      li.append(mk('+', 'plus', 'Utsett 7 dager', () => {
         const base = it.dueDate && it.dueDate > today() ? it.dueDate : today();
         C.updateItem(store, it.id, { dueDate: new Date((dayNo(base) + 7) * 864e5).toISOString().slice(0, 10) }); save();
       }));
@@ -323,7 +398,7 @@ function render() {
     if (page === 'backlog') li.append(mk('→ PrivTODO', '', 'Flytt til PrivTODO', () => {
       C.updateItem(store, it.id, { list: 'priv', category: null, priority: null, dueDate: today(), sprint: false, order: null }); save();
     }));
-    if (page === 'quick') li.append(mk(it.done ? 'Angre' : 'Done', '', '', () => { C.updateItem(store, it.id, { done: !it.done }); save(); }));
+    if (page === 'quick') li.append(mk('✓', it.done ? 'chk on' : 'chk', it.done ? 'Angre' : 'Ferdig', () => { C.updateItem(store, it.id, { done: !it.done }); save(); }));
     const m = mk('⋯', 'more', 'Actions', e => { e.stopPropagation(); showMenu(m, it); });
     li.append(m);
     $('list').appendChild(li);
@@ -339,7 +414,7 @@ function showMenu(anchor, it) {
   const menu = document.createElement('div'); menu.className = 'menu';
   const add = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.onclick = () => { closeMenu(); fn(); }; menu.append(b); };
   if (['work', 'priv', 'watch'].includes(p)) add(p === 'watch' ? (it.done ? 'Unwatch' : 'Mark as watched') : it.done ? 'Reopen' : 'Mark as done', () => { C.updateItem(store, it.id, { done: !it.done }); save(); });
-  if (p === 'priv') add(it.sprint ? 'Remove from sprint' : 'Add to sprint', () => { C.updateItem(store, it.id, { sprint: !it.sprint }); save(); });
+  if (p === 'priv' || p === 'work') add(it.sprint ? 'Remove from sprint' : 'Add to sprint', () => it.sprint ? (C.updateItem(store, it.id, { sprint: false }), save()) : openSprintDate(it.id, 'add'));
   if (p === 'priv') add('Flytt til Backlog', () => { C.updateItem(store, it.id, { list: 'backlog', hot: false, category: null, priority: null, dueDate: null, sprint: false, order: null }); save(); });
   add('Edit…', () => openEdit(it.id));
   add('Delete', () => { C.deleteItem(store, it.id); save(); });
@@ -365,11 +440,15 @@ C.CATEGORIES.forEach(c => opt($('ecat'), c, c));
 opt($('epri'), '', 'Priority'); Object.entries(C.PRIORITIES).forEach(([k, v]) => opt($('epri'), k, v));
 function openEdit(id) {
   const it = store.items[id]; if (!it) return; openId = id;
-  const p = pageOf(it), priv = p === 'priv', fq = FQ.includes(p), wt = p === 'watch';
+  const p = pageOf(it), priv = p === 'priv', wp = priv || p === 'work', fq = FQ.includes(p), wt = p === 'watch';
   $('etitle').value = it.title;
   $('efl').hidden = $('ell').hidden = !fq;
   if (fq) { $('efreq').value = fOf(it) || ''; $('elast').value = it.lastPerformed || ''; }
-  $('ecat').hidden = $('epri').hidden = $('edue').hidden = !priv;
+  $('ecat').hidden = $('epri').hidden = !priv;
+  $('edue').hidden = $('espl').hidden = !wp;
+  $('edays').hidden = p !== 'kveld';
+  if (p === 'kveld') $('edays').querySelectorAll('input').forEach(c => c.checked = (it.days || []).includes(+c.dataset.d));
+  if (wp) { $('edue').value = it.dueDate || ''; $('esp').checked = !!it.sprint; }
   $('esrc').hidden = $('ewho').hidden = !wt;
   if (wt) {
     if (it.source && ![...$('esrc').options].some(o => o.value === it.source)) opt($('esrc'), it.source, it.source);
@@ -377,7 +456,7 @@ function openEdit(id) {
   }
   if (priv) {
     if (it.category && ![...$('ecat').options].some(o => o.value === it.category)) opt($('ecat'), it.category, it.category);
-    $('ecat').value = it.category || C.CATEGORIES[0]; $('epri').value = it.priority || ''; $('edue').value = it.dueDate || '';
+    $('ecat').value = it.category || C.CATEGORIES[0]; $('epri').value = it.priority || '';
   }
   $('editd').showModal();
 }
@@ -385,11 +464,238 @@ $('ecancel').onclick = () => $('editd').close();
 $('eform').onsubmit = e => {
   e.preventDefault();
   const it = store.items[openId], p = pageOf(it), patch = { title: $('etitle').value.trim() };
-  if (p === 'priv') Object.assign(patch, { category: $('ecat').value, priority: +$('epri').value || null, dueDate: $('edue').value || null });
+  if (p === 'priv') Object.assign(patch, { category: $('ecat').value, priority: +$('epri').value || null });
+  if (p === 'priv' || p === 'work') {
+    const date = $('edue').value || null, sp = $('esp').checked;
+    Object.assign(patch, { dueDate: date, sprint: sp }, C.datePatch({ sprint: sp }, date, S(), today()));
+    if (sp && patch.sprint === false) say('Dato er etter sprinten, så punktet er tatt ut av sprinten.');
+  }
+  if (p === 'kveld') patch.days = [...$('edays').querySelectorAll('input')].filter(c => c.checked).map(c => +c.dataset.d);
   if (p === 'watch') Object.assign(patch, { source: $('esrc').value, who: $('ewho').value });
   if (FQ.includes(p)) Object.assign(patch, { intervalDays: Math.round(+$('efreq').value) || null, lastPerformed: $('elast').value || null });
   C.updateItem(store, openId, patch); $('editd').close(); save();
 };
+
+
+// ---- Settings, sprint date, filter popup ----
+const S = () => C.getSettings(store);
+function applySettings() {
+  const c = S().colors, r = document.documentElement.style;
+  r.setProperty('--accent', c.accent); r.setProperty('--hot', c.hot);
+  Object.entries(c).forEach(([k, v]) => r.setProperty('--c-' + k, v));
+}
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+$('fbtn').onclick = () => $('fdlg').showModal();
+$('fclose').onclick = () => $('fdlg').close();
+$('fdlg').addEventListener('click', e => { if (e.target === $('fdlg')) $('fdlg').close(); });
+C.DAY_NAMES.forEach((n, i) => [$('adays'), $('edays')].forEach(box => {
+  const l = el('label'); const c = document.createElement('input'); c.type = 'checkbox'; c.dataset.d = i + 1; c.checked = box === $('adays');
+  l.append(c, ' ' + n); box.append(l);
+}));
+
+// Sprint date popup. mode "add": put an item in the sprint with a date. mode "date": set a new date for an item already in the sprint.
+let sdId = null, sdMode = 'add';
+function openSprintDate(id, mode) {
+  const it = store.items[id]; if (!it) return; sdId = id; sdMode = mode;
+  const r = C.sprintRange(S(), today());
+  $('sdt').textContent = (mode === 'add' ? 'Dato i sprint: ' : 'Ny dato: ') + it.title;
+  $('sdate').value = it.dueDate && (mode === 'date' || (it.dueDate >= r.start && it.dueDate <= r.end)) ? it.dueDate : '';
+  $('sdate').min = mode === 'add' ? r.start : ''; $('sdate').max = mode === 'add' ? r.end : '';
+  $('sdn').textContent = 'Sprint ' + dm(r.start) + ' – ' + dm(r.end) + (mode === 'date' ? '. En dato etter sprinten tar punktet ut av sprinten.' : '. Tom dato = vises første dag i sprinten.');
+  $('sdout').hidden = mode === 'add';
+  $('sdd').showModal();
+}
+$('sdform').onsubmit = e => {
+  e.preventDefault();
+  const date = $('sdate').value || null;
+  C.updateItem(store, sdId, sdMode === 'add' ? { sprint: true, dueDate: date } : C.datePatch({ sprint: true }, date, S(), today()));
+  $('sdd').close(); save();
+};
+$('sdout').onclick = () => { C.updateItem(store, sdId, { sprint: false }); $('sdd').close(); save(); };
+$('sdcancel').onclick = () => $('sdd').close();
+
+// ---- Dashboard ----
+const DK = 'todo-dash';
+const DAYS_FULL = ['mandag', 'tirsdag', 'onsdag', 'torsdag', 'fredag', 'lørdag', 'søndag'];
+const MONTHS = ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'];
+const KINDS = { work: 'WorkTODO', priv: 'PrivTODO', recurring: 'Tog', interval: 'Recurring', quick: 'Quick' };
+const dashDef = () => ({ sf: 'both', mf: 'all', kv: true, month: today().slice(0, 7), open: {} });
+const dash = () => { try { return { ...dashDef(), ...JSON.parse(localStorage[DK] || '{}') }; } catch { return dashDef(); } };
+const setDash = p => { localStorage[DK] = JSON.stringify({ ...dash(), ...p }); render(); };
+const calDate = it => { const p = pageOf(it); return !KINDS[p] ? null : (p === 'recurring' || p === 'interval') ? nextDue(it) : (it.dueDate || null); };
+
+function section(key, title, build) {
+  const d = el('details', 'dsec'); d.open = dash().open[key] !== false;
+  d.append(el('summary', null, title), build());
+  d.addEventListener('toggle', () => { const o = dash().open; if (d.open !== (o[key] !== false)) localStorage[DK] = JSON.stringify({ ...dash(), open: { ...o, [key]: d.open } }); });
+  return d;
+}
+function selectOf(opts, val, fn) {
+  const s = document.createElement('select');
+  opts.forEach(([v, t]) => opt(s, v, t)); s.value = val; s.onchange = () => fn(s.value); return s;
+}
+function legend(kinds, kv) {
+  const l = el('div', 'legend');
+  kinds.forEach(k => { const s = el('span'); const i = el('i'); i.style.background = 'var(--c-' + k + ')'; s.append(i, KINDS[k]); l.append(s); });
+  if (kv) [['kveldDone', 'Rutine gjort'], ['kveldMiss', 'Rutine ikke gjort'], ['kveldToday', 'Rutine i dag'], ['kveldOpen', 'Rutine senere']].forEach(([k, t]) => { const s = el('span'); const i = el('i'); i.style.background = 'var(--c-' + k + ')'; s.append(i, t); l.append(s); });
+  return l;
+}
+function chip(it, late) {
+  const p = pageOf(it);
+  const c = el('div', 'chip' + (it.done ? ' done' : ''), (late === 'none' ? '? ' : late === 'old' ? '! ' : '') + (it.hot ? '★ ' : '') + it.title);
+  c.style.background = 'var(--c-' + p + ')'; c.title = KINDS[p] + ': ' + it.title + (late === 'none' ? ' (uten dato - klikk for å sette dato)' : late === 'old' ? ' (dato passert - klikk for å sette ny dato)' : '');
+  c.onclick = e => { e.stopPropagation(); late ? openSprintDate(it.id, 'date') : openEdit(it.id); };
+  return c;
+}
+function kveldChip(date) {
+  const { state } = C.kveldStatus(store, date, today());
+  if (state === 'none') return null;
+  const c = el('div', 'chip' + (state === 'today' ? ' kt' : ''), (state === 'done' ? '✓ ' : state === 'miss' ? '✗ ' : '') + 'Kveldsrutine ' + DAYS_FULL[C.weekday(date) - 1]);
+  c.style.background = 'var(--c-' + { done: 'kveldDone', miss: 'kveldMiss', today: 'kveldToday', open: 'kveldOpen' }[state] + ')';
+  c.onclick = e => { e.stopPropagation(); openKveld(date); };
+  return c;
+}
+function cell(date, chips, other) {
+  const c = el('div', 'cell' + (date === today() ? ' today' : '') + (other ? ' other' : '') + (chips.length ? '' : ' empty'));
+  const dn = el('div', 'dn'); dn.append(el('span', 'dd', String(+date.slice(8)) + (date.slice(8) === '01' ? ' ' + MON[+date.slice(5, 7) - 1] : '')), el('span', 'dm', DAYS_FULL[C.weekday(date) - 1] + ' ' + dm(date)));
+  c.append(dn, ...chips); return c;
+}
+function dowHeader(grid) { C.DAY_NAMES.forEach(n => grid.append(el('div', 'dow', n))); }
+
+function buildStars() {
+  const box = el('div'); let any = false;
+  for (const [p, name] of [['work', 'WorkTODO'], ['priv', 'PrivTODO'], ['quick', 'Quick'], ['watch', 'Watchlist']]) {
+    const items = C.activeItems(store).filter(i => pageOf(i) === p && i.hot && !i.done).sort(byCreated);
+    if (!items.length) continue; any = true;
+    box.append(el('div', 'gh', name + ' (' + items.length + ')'));
+    const ul = el('ul');
+    items.forEach(it => {
+      const li = el('li', 'wl'), t = el('div', 't clamp main', it.title); t.onclick = () => openDetail(it.id);
+      li.append(t);
+      if (it.dueDate) li.append(el('small', null, dm(it.dueDate)));
+      li.append(mk('✓', 'chk', 'Ferdig', () => { C.updateItem(store, it.id, { done: true }); save(); }));
+      ul.append(li);
+    });
+    box.append(ul);
+  }
+  if (!any) box.append(el('small', null, 'Ingen stjernemerkede punkter.'));
+  return box;
+}
+
+function buildSprint() {
+  const D = dash(), r = C.sprintRange(S(), today()), box = el('div');
+  const bar = el('div', 'bar'); bar.append(el('b', null, 'Sprint ' + dm(r.start) + ' – ' + dm(r.end)),
+    selectOf([['both', 'Work + privat'], ['work', 'Bare work'], ['priv', 'Bare privat']], D.sf, v => setDash({ sf: v })));
+  const lab = el('label'); const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = D.kv; cb.onchange = () => setDash({ kv: cb.checked }); lab.append(cb, ' Kveldsrutine'); bar.append(lab);
+  box.append(bar, legend(D.sf === 'both' ? ['work', 'priv'] : [D.sf], D.kv && D.sf !== 'work'));
+  const byDate = {}, put = (d, c) => (byDate[d] = byDate[d] || []).push(c);
+  C.activeItems(store).filter(i => i.sprint && ['work', 'priv'].includes(pageOf(i)) && (D.sf === 'both' || pageOf(i) === D.sf)).sort(byCreated).forEach(it => {
+    if (!it.dueDate) put(r.start, chip(it, 'none'));
+    else if (it.dueDate < r.start) put(r.start, chip(it, 'old'));
+    else if (it.dueDate <= r.end) put(it.dueDate, chip(it));
+  });
+  const grid = el('div', 'cal'); dowHeader(grid);
+  const n = C.dayNum(r.end) - C.dayNum(r.start) + 1;
+  for (let k = 0; k < n; k++) {
+    const d = C.isoDay(C.dayNum(r.start) + k), chips = byDate[d] || [];
+    const kc = D.kv && D.sf !== 'work' ? kveldChip(d) : null;
+    grid.append(cell(d, kc ? [...chips, kc] : chips));
+  }
+  box.append(grid); return box;
+}
+
+function buildMonth() {
+  const D = dash(), [y, m] = D.month.split('-').map(Number), pad = n => String(n).padStart(2, '0');
+  const first = y + '-' + pad(m) + '-01', dim = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const lead = C.weekday(first) - 1, rows = Math.ceil((lead + dim) / 7), g0 = C.dayNum(first) - lead;
+  const shift = k => { const t = new Date(Date.UTC(y, m - 1 + k, 1)); setDash({ month: t.getUTCFullYear() + '-' + pad(t.getUTCMonth() + 1) }); };
+  const box = el('div'), bar = el('div', 'bar');
+  bar.append(mk('◀', '', 'Forrige måned', () => shift(-1)), el('b', null, MONTHS[m - 1] + ' ' + y), mk('▶', '', 'Neste måned', () => shift(1)),
+    mk('I dag', '', '', () => setDash({ month: today().slice(0, 7) })),
+    selectOf([['all', 'Alt samlet'], ['work', 'Bare work'], ['other', 'Alt annet']], D.mf, v => setDash({ mf: v })));
+  const lab = el('label'); const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = D.kv; cb.onchange = () => setDash({ kv: cb.checked }); lab.append(cb, ' Kveldsrutine'); bar.append(lab);
+  const kinds = Object.keys(KINDS).filter(k => D.mf === 'all' || (D.mf === 'work') === (k === 'work'));
+  box.append(bar, legend(kinds, D.kv && D.mf !== 'work'));
+  const byDate = {};
+  C.activeItems(store).forEach(it => {
+    const p = pageOf(it), d = calDate(it);
+    if (!d || !kinds.includes(p)) return;
+    (byDate[d] = byDate[d] || []).push(it);
+  });
+  const grid = el('div', 'cal'); dowHeader(grid);
+  for (let k = 0; k < rows * 7; k++) {
+    const d = C.isoDay(g0 + k), chips = (byDate[d] || []).sort(byCreated).map(it => chip(it));
+    const kc = D.kv && D.mf !== 'work' && d.slice(0, 7) === D.month ? kveldChip(d) : null;
+    grid.append(cell(d, kc ? [...chips, kc] : chips, d.slice(0, 7) !== D.month));
+  }
+  box.append(grid); return box;
+}
+
+function renderDash() {
+  const box = $('pagebox');
+  box.append(section('star', '★ Viktig (stjernemarkert)', buildStars), section('sprint', 'Sprint', buildSprint), section('month', 'Måned', buildMonth));
+}
+
+// Evening routine popup: show the activities of a date and mark the whole routine as done.
+function openKveld(date) {
+  const { state, acts } = C.kveldStatus(store, date, today());
+  $('kdt').textContent = 'Kveldsrutine ' + DAYS_FULL[C.weekday(date) - 1] + ' ' + dm(date);
+  $('kdl').innerHTML = ''; acts.forEach(a => $('kdl').append(el('li', null, a.title)));
+  const done = state === 'done', future = date > today();
+  $('kdn').textContent = done ? 'Gjennomført.' : future ? 'Kan ikke kvitteres ut før dagen.' : state === 'miss' ? 'Ikke gjennomført.' : '';
+  $('kdok').textContent = done ? 'Angre kvittering' : 'Kvitter ut ✓'; $('kdok').disabled = future;
+  $('kdok').onclick = () => { C.setKveldDone(store, date, !done); $('kdlg').close(); save(); };
+  $('kdlg').showModal();
+}
+$('kdclose').onclick = () => $('kdlg').close();
+$('kdlg').addEventListener('click', e => { if (e.target === $('kdlg')) $('kdlg').close(); });
+
+// ---- Kveld page ----
+const KDAY = 'todo-kveld-day';
+function renderKveld() {
+  const box = $('pagebox'), sel = localStorage[KDAY] || 'all', tw = C.weekday(today());
+  const bar = el('div', 'bar');
+  [['all', 'Alle'], ...C.DAY_NAMES.map((n, i) => [String(i + 1), n])].forEach(([v, t]) => {
+    const b = mk(t + (v === String(tw) ? ' •' : ''), v === sel ? 'chk on' : 'chk', '', () => { localStorage[KDAY] = v; render(); }); bar.append(b);
+  });
+  bar.append(mk('Kvitter ut i dag', '', 'Åpne dagens rutine', () => openKveld(today())));
+  box.append(bar);
+  const acts = sel === 'all' ? C.kveldActs(store) : C.kveldFor(store, +sel);
+  if (!acts.length) box.append(el('small', null, 'Ingen aktiviteter.'));
+  const ul = el('ul');
+  acts.forEach(a => {
+    const li = el('li', 'wl'), main = el('div', 'main');
+    main.append(el('div', 't', a.title));
+    if (sel === 'all') main.append(el('small', null, (a.days || []).length === 7 ? 'Hver dag' : (a.days || []).map(d => C.DAY_NAMES[d - 1]).join(' ')));
+    li.append(main);
+    const m = mk('⋯', 'more', 'Actions', e => { e.stopPropagation(); showMenu(m, a); }); li.append(m); ul.append(li);
+  });
+  box.append(ul, el('small', null, 'Kvittering og historikk (grønn/rød) ligger i kalenderne i Dashboard.'));
+}
+
+// ---- Settings page ----
+const COLOR_LABELS = { accent: 'Aksent (topp-knapper)', hot: 'Stjerne / viktig', work: 'Kalender: WorkTODO', priv: 'Kalender: PrivTODO', recurring: 'Kalender: Tog', interval: 'Kalender: Recurring', quick: 'Kalender: Quick', kveldDone: 'Kveld: gjort', kveldMiss: 'Kveld: ikke gjort', kveldToday: 'Kveld: i dag', kveldOpen: 'Kveld: senere' };
+function renderSettings() {
+  const s = S(), box = $('pagebox'), cfg = () => ({ sprintStart: s.sprintStart, sprintDays: s.sprintDays, colors: { ...s.colors } });
+  const commit = c => { C.saveSettings(store, c); save(); };
+  box.append(el('div', 'gh', 'Sprint'));
+  const g = el('div', 'sgrid');
+  const l1 = el('label', null, 'Første sprint starter (mandag)'), d1 = document.createElement('input'); d1.type = 'date'; d1.value = s.sprintStart;
+  d1.onchange = () => { if (!d1.value) return; if (C.weekday(d1.value) !== 1) say('Sprintstart bør være en mandag.'); const c = cfg(); c.sprintStart = d1.value; commit(c); };
+  l1.append(d1);
+  const l2 = el('label', null, 'Sprintlengde (dager)'), d2 = document.createElement('input'); d2.type = 'number'; d2.min = 7; d2.max = 28; d2.value = s.sprintDays; d2.style.width = '4rem';
+  d2.onchange = () => { const c = cfg(); c.sprintDays = Math.min(28, Math.max(7, Math.round(+d2.value) || 14)); commit(c); };
+  l2.append(d2); g.append(l1, l2); box.append(g);
+  const r = C.sprintRange(s, today()); box.append(el('small', null, 'Gjeldende sprint: ' + dm(r.start) + ' – ' + dm(r.end)));
+  box.append(el('div', 'gh', 'Farger'));
+  const cg = el('div', 'sgrid');
+  Object.entries(COLOR_LABELS).forEach(([k, t]) => {
+    const l = el('label', null, t), i = document.createElement('input'); i.type = 'color'; i.value = s.colors[k];
+    i.onchange = () => { const c = cfg(); c.colors[k] = i.value; commit(c); }; l.append(i); cg.append(l);
+  });
+  box.append(cg, mk('Tilbakestill til standard', '', '', () => { if (confirm('Tilbakestille alle innstillinger?')) commit({ sprintStart: C.DEFAULT_SETTINGS.sprintStart, sprintDays: C.DEFAULT_SETTINGS.sprintDays, colors: { ...C.DEFAULT_SETTINGS.colors } }); }));
+  $('settings').open = true;
+}
 
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => { page = b.dataset.page; localStorage['todo-page'] = page; render(); });
 
@@ -397,13 +703,21 @@ $('add').onsubmit = e => {
   e.preventDefault();
   const f = { list: page };
   if (page === 'watch') {
-    const mx = Math.max(0, ...C.activeItems(store).filter(i => i.list === 'watch').map(i => i.order || 0));
-    Object.assign(f, { source: $('wsrc').value, who: $('wwho').value, alsoOn: [], order: mx + 1 });
+    const mn = Math.min(1, ...C.activeItems(store).filter(i => i.list === 'watch').map(i => i.order || 0));
+    Object.assign(f, { source: $('wsrc').value, who: $('wwho').value, alsoOn: [], order: mn - 1 });   // new titles go to the top
   }
   if (FQ.includes(page)) Object.assign(f, { intervalDays: Math.round(+$('freq').value) || 30, lastPerformed: $('lastd').value || (page === 'interval' ? today() : null) });
-  if (page === 'priv') Object.assign(f, { category: $('cat').value, priority: +$('pri').value || null, dueDate: $('due').value || today() });
+  if (page === 'priv') Object.assign(f, { category: $('cat').value, priority: +$('pri').value || null });
+  if (page === 'priv' || page === 'work') {
+    const date = $('due').value || (page === 'priv' ? today() : null), sp = $('asp').checked;
+    Object.assign(f, { dueDate: date, sprint: sp }, C.datePatch({ sprint: sp }, date, S(), today()));
+  }
+  if (page === 'kveld') {
+    f.days = [...$('adays').querySelectorAll('input')].filter(c => c.checked).map(c => +c.dataset.d);
+    if (!f.days.length) return say('Velg minst én dag.');
+  }
   C.addItem(store, $('title').value.trim(), f);
-  $('title').value = ''; $('freq').value = ''; $('lastd').value = ''; $('pri').value = ''; $('due').value = ''; save();
+  $('title').value = ''; $('freq').value = ''; $('lastd').value = ''; $('pri').value = ''; $('due').value = ''; $('asp').checked = false; save();
 };
 
 $('export').onclick = () => {
@@ -425,8 +739,8 @@ if (location.hash.startsWith('#setup=')) {
   } catch (e) { say('Setup link failed: ' + e.message); }
   history.replaceState(null, '', location.pathname);
 }
-if (!SORTS[page]) page = 'work';
+if (!SORTS[page] && !SPECIAL.includes(page)) page = 'work';
 render();
-if (!cfg()) say('Cloud sync er ikke satt opp. Åpne Innstillinger nederst.');
+if (!cfg()) say('Cloud sync er ikke satt opp. Åpne Settings-fanen (⚙).');
 cloudSync();
 </script></body></html>
